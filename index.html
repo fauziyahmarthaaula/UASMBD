@@ -36,42 +36,71 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-  --bg: #071426;
-  --surface: #10233f;
-  --surface-2: #183255;
-  --border: #29476d;
+  :root{
+    --bg:#081827;
+    --surface:rgba(18,35,63,.85);
+    --surface-2:#1d365d;
+    --border:rgba(255,255,255,.08);
 
-  --text: #ffffff;
-  --text-muted: #a8bdd7;
+    --text:#ffffff;
+    --text-muted:#b8c7df;
 
-  --accent: #5fb3ff;
-  --accent-light: rgba(95,179,255,.15);
+    --accent:#69b9ff;
+    --accent-light:rgba(105,185,255,.18);
 
-  --warn: #ffb84d;
-  --warn-light: rgba(255,184,77,.15);
+    --warn:#ffbc5a;
+    --warn-light:rgba(255,188,90,.18);
 
-  --gold: #ffd166;
-  --gold-light: rgba(255,209,102,.15);
+    --gold:#ffd66e;
+    --gold-light:rgba(255,214,110,.18);
 
-  --blue: #74c0fc;
-  --blue-light: rgba(116,192,252,.15);
+    --blue:#73c4ff;
+    --blue-light:rgba(115,196,255,.18);
 
-  --radius: 14px;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --radius:18px;
+    --radius-sm:12px;
+
+    --shadow:0 15px 40px rgba(0,0,0,.35);
 }
 
-body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:rgba(4,13,25,.45);
-    pointer-events:none;
-}
- body{
+body{
     font-family:'Plus Jakarta Sans',sans-serif;
     min-height:100vh;
     color:var(--text);
+
+    background:
+    radial-gradient(circle at top,#183d69,#071626 60%);
+
+    overflow-x:hidden;
+    position:relative;
+}
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+
+    background-image:
+    url("https://cdn-icons-png.flaticon.com/512/616/616408.png"),
+    url("https://cdn-icons-png.flaticon.com/512/616/616408.png"),
+    url("https://cdn-icons-png.flaticon.com/512/616/616408.png");
+
+    background-size:
+    40px,
+    60px,
+    45px;
+
+    background-repeat:no-repeat;
+
+    background-position:
+    8% 12%,
+    70% 82%,
+    92% 18%;
+
+    opacity:.05;
+
+    pointer-events:none;
+}
 
     background:
     url("https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=300&q=80") no-repeat left bottom,
@@ -89,9 +118,11 @@ body::before{
   .layout { display: flex; min-height: 100vh; }
 
  aside{
-    background:rgba(8,22,45,.92);
-    backdrop-filter:blur(10px);
-    border-right:1px solid rgba(255,255,255,.08);
+
+background:#08152a;
+
+border-right:1px solid rgba(255,255,255,.08);
+
 }
   .sidebar-brand {
     padding: 28px 24px 20px;
@@ -182,16 +213,27 @@ body::before{
     margin-bottom: 28px;
   }
 
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-  }
+  .stat-card{
 
-  .stat-card .label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .6px; }
+background:rgba(18,35,63,.85);
 
+backdrop-filter:blur(12px);
+
+border-radius:18px;
+
+border:1px solid rgba(255,255,255,.08);
+
+box-shadow:var(--shadow);
+
+transition:.25s;
+
+}
+
+ .stat-card:hover{
+
+transform:translateY(-4px);
+
+}
   .stat-card .value {
     font-size: 32px;
     font-weight: 700;
@@ -230,20 +272,36 @@ body::before{
   }
 
   /* PROPERTY CARD */
-  .property-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
-  }
+  .property-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:25px;
+}
+  .prop-card{
+    position:relative;
 
-  .prop-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
+    background:rgba(18,35,63,.92);
 
+    backdrop-filter:blur(12px);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    box-shadow:0 15px 35px rgba(0,0,0,.35);
+
+    transition:.3s;
+}
+
+.prop-card:hover{
+
+transform:translateY(-4px);
+
+box-shadow:0 20px 50px rgba(0,0,0,.45);
+
+}
   .prop-card-header {
     padding: 18px 20px 14px;
     border-bottom: 1px solid var(--border);
@@ -449,7 +507,9 @@ body::before{
   <!-- SIDEBAR -->
   <aside>
     <div class="sidebar-brand">
-      <div class="logo">Kos<span>kita</span></div>
+      <div class="logo">
+🐱 Kos<span>Kita</span>
+</div>
       <div class="owner-label">Dashboard Pemilik</div>
     </div>
     <nav>
