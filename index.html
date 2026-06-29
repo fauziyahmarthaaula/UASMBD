@@ -188,6 +188,12 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 .form-group select option{background:#0d1f3c;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
+/* ── MODAL PROPERTI ── */
+.prop-type-selector{display:flex;gap:10px;margin-bottom:4px;}
+.prop-type-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border2);background:rgba(255,255,255,.04);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;}
+.prop-type-btn.selected{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);}
+.prop-type-btn:hover:not(.selected){background:rgba(255,255,255,.08);color:var(--text);}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#0d1f3c;border:1px solid var(--border2);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;color:var(--text);z-index:2000;transition:transform .3s;box-shadow:var(--shadow-lg);}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -201,6 +207,12 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 .confirm-inner p{font-size:14px;color:var(--muted);margin:8px 0 20px;}
 .confirm-inner h4{font-size:16px;font-weight:700;color:#fff;}
 .confirm-btns{display:flex;gap:10px;justify-content:center;}
+
+/* ── PROP TYPE BADGE ── */
+.prop-type-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px;}
+.prop-type-tag.putra{background:rgba(90,171,255,.15);color:var(--accent);border:1px solid rgba(90,171,255,.2);}
+.prop-type-tag.putri{background:rgba(255,107,107,.12);color:#ff9eb5;border:1px solid rgba(255,107,107,.2);}
+.prop-type-tag.campur{background:var(--green-bg);color:var(--green);border:1px solid rgba(77,214,160,.2);}
 
 @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}.two-col{grid-template-columns:1fr;}}
 @media(max-width:768px){aside{display:none;}main{padding:18px 14px;}.stats-row{grid-template-columns:repeat(2,1fr);gap:10px;}.cat-top{display:none;}.form-row{grid-template-columns:1fr;}}
@@ -237,14 +249,15 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       </div>
       <div class="form-group"><label>No. KTP</label><input type="text" id="fKtp" placeholder="16 digit NIK" maxlength="16"/></div>
       <div class="form-row">
-        <div class="form-group"><label>Properti *</label><select id="fProperty"><option value="">— Pilih Properti —</option></select></div>
+        <div class="form-group">
+          <label>Properti *</label>
+          <select id="fProperty" onchange="updateRoomDropdown('fProperty','fRoom')">
+            <option value="">— Pilih Properti —</option>
+          </select>
+        </div>
         <div class="form-group"><label>No. Kamar *</label>
           <select id="fRoom">
             <option value="">— Pilih Kamar —</option>
-            <option value="1">Kamar 1</option>
-            <option value="2">Kamar 2</option>
-            <option value="3">Kamar 3</option>
-            <option value="4">Kamar 4</option>
           </select>
         </div>
       </div>
@@ -268,14 +281,15 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       <input type="hidden" id="editRoomId"/>
       <input type="hidden" id="editRoomPropId"/>
       <div class="form-row">
-        <div class="form-group"><label>Properti *</label><select id="rProperty"><option value="">— Pilih Properti —</option></select></div>
+        <div class="form-group">
+          <label>Properti *</label>
+          <select id="rProperty" onchange="updateRoomDropdown('rProperty','rNumber')">
+            <option value="">— Pilih Properti —</option>
+          </select>
+        </div>
         <div class="form-group"><label>No. Kamar *</label>
           <select id="rNumber">
             <option value="">— Pilih —</option>
-            <option value="1">Kamar 1</option>
-            <option value="2">Kamar 2</option>
-            <option value="3">Kamar 3</option>
-            <option value="4">Kamar 4</option>
           </select>
         </div>
       </div>
@@ -303,6 +317,38 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
     <div class="modal-footer">
       <button class="btn btn-danger" onclick="closeRoomModal()">Batal</button>
       <button class="btn btn-primary" onclick="saveRoom()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL PROPERTI ══ -->
+<div class="modal-overlay" id="propModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="propModalTitle">➕ Tambah Properti</h3>
+      <button class="modal-close" onclick="closePropModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editPropId"/>
+      <div class="form-group"><label>Nama Properti *</label><input type="text" id="pName" placeholder="cth. Kos Putra Jombang"/></div>
+      <div class="form-group"><label>Tipe Kos *</label>
+        <div class="prop-type-selector">
+          <button class="prop-type-btn selected" id="ptBtn-putra" onclick="selectPropType('putra')">🧑 Kos Putra</button>
+          <button class="prop-type-btn" id="ptBtn-putri" onclick="selectPropType('putri')">👩 Kos Putri</button>
+          <button class="prop-type-btn" id="ptBtn-campur" onclick="selectPropType('campur')">👫 Kos Campur</button>
+        </div>
+        <input type="hidden" id="pType" value="putra"/>
+      </div>
+      <div class="form-group"><label>Alamat *</label><input type="text" id="pAddress" placeholder="cth. Jl. Gatot Subroto No.12, Jombang"/></div>
+      <div class="form-group"><label>Fasilitas (pisahkan dengan koma)</label><input type="text" id="pFacilities" placeholder="cth. WiFi, AC, Parkir Motor"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Jumlah Kamar</label><input type="number" id="pRoomCount" placeholder="cth. 10" min="1" max="50"/></div>
+        <div class="form-group"><label>No. Telepon Pemilik</label><input type="text" id="pPhone" placeholder="cth. 08123456789"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="closePropModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveProp()">💾 Simpan</button>
     </div>
   </div>
 </div>
@@ -362,7 +408,10 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
         <div class="stat-card purple"><div class="stat-icon">🔧</div><div class="stat-info"><div class="label">Perbaikan Terbuka</div><div class="value" id="statMaint">—</div><div class="meta">permintaan aktif</div></div></div>
       </div>
       <div class="section">
-        <div class="section-title">🏢 Properti <span class="count-pill" id="propCount">0</span></div>
+        <div class="section-toolbar">
+          <div class="section-title">🏢 Properti <span class="count-pill" id="propCount">0</span></div>
+          <button class="btn btn-primary" onclick="openAddPropModal()">➕ Tambah Properti</button>
+        </div>
         <div class="property-grid" id="propertyGrid">
           <div class="prop-card" style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">🐱 Memuat data properti...</div>
         </div>
@@ -443,11 +492,12 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 <script>
 // ── STATE ──
 let _properties=[], _tenants=[], _payments=[], _maints=[], _allRooms=[];
-let _db, _col, _getDocs, _addDoc, _updateDoc, _deleteDoc, _docFn;
-let _pendingDelete = null; // { type:'tenant'|'room', id, propId }
+let _db, _col, _getDocs, _addDoc, _updateDoc, _deleteDoc, _docFn, _serverTimestamp;
+let _pendingDelete = null;
+let _selectedPropType = 'putra';
 
 // ── PANEL ──
-function showPanel(name,el){
+function showPanel(name, el){
   document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
@@ -459,176 +509,337 @@ function showPanel(name,el){
     payments:['Pembayaran','Tagihan dan riwayat pembayaran'],
     maintenance:['Perbaikan','Permintaan perbaikan & perawatan'],
   };
-  document.getElementById('pageTitle').textContent=t[name][0];
-  document.getElementById('pageSubtitle').textContent=t[name][1];
+  document.getElementById('pageTitle').textContent = t[name][0];
+  document.getElementById('pageSubtitle').textContent = t[name][1];
 }
 
 // ── HELPERS ──
-function fmt(n){return 'Rp '+Number(n).toLocaleString('id-ID');}
+function fmt(n){ return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+
 function fmtDate(ts){
-  if(!ts)return '—';
-  try{const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});}
-  catch{return '—';}
+  if(!ts) return '—';
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    if(isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+  } catch(e) {
+    return '—';
+  }
 }
-function emptyRow(cols,msg){return `<tr><td colspan="${cols}" class="empty-state">🐱 ${msg}</td></tr>`;}
+
+function emptyRow(cols, msg){
+  return `<tr><td colspan="${cols}" class="empty-state">🐱 ${msg}</td></tr>`;
+}
 
 // ── TOAST ──
-function showToast(msg,type='success'){
-  const t=document.getElementById('toast');
-  t.textContent=(type==='success'?'✅ ':'❌ ')+msg;
-  t.className=`toast ${type} show`;
-  setTimeout(()=>t.classList.remove('show'),3000);
+function showToast(msg, type='success'){
+  const t = document.getElementById('toast');
+  t.textContent = (type==='success' ? '✅ ' : '❌ ') + msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── PROP TYPE LABEL ──
+const PROP_TYPE_LABELS = { putra:'Kos Putra', putri:'Kos Putri', campur:'Kos Campur' };
+function propTypeTag(type){
+  if(!type) return '';
+  const label = PROP_TYPE_LABELS[type] || type;
+  return `<span class="prop-type-tag ${type}">${label}</span>`;
+}
+
+// ── ROOM DROPDOWN — populate berdasarkan kamar yang sudah ada di properti ──
+function buildRoomOptions(propId, currentVal){
+  const existing = _allRooms
+    .filter(r => r.propertyId === propId)
+    .map(r => Number(r.roomNumber || r.id.replace('room','')))
+    .filter(n => !isNaN(n));
+  const maxRoom = Math.max(20, ...existing, 0);
+  let opts = '<option value="">— Pilih Kamar —</option>';
+  for(let i = 1; i <= maxRoom + 4; i++){
+    opts += `<option value="${i}"${String(i)===String(currentVal)?' selected':''}>Kamar ${i}</option>`;
+  }
+  return opts;
+}
+
+function updateRoomDropdown(propSelectId, roomSelectId){
+  const propId = document.getElementById(propSelectId).value;
+  const roomSel = document.getElementById(roomSelectId);
+  if(!propId){ roomSel.innerHTML = '<option value="">— Pilih Kamar —</option>'; return; }
+  roomSel.innerHTML = buildRoomOptions(propId, '');
 }
 
 // ── FILL PROPERTY DROPDOWNS ──
 function fillPropSelects(){
-  const opts='<option value="">— Pilih Properti —</option>'+
-    _properties.map(p=>`<option value="${p.id}">${p.name||p.id}</option>`).join('');
-  document.getElementById('fProperty').innerHTML=opts;
-  document.getElementById('rProperty').innerHTML=opts;
+  const opts = '<option value="">— Pilih Properti —</option>' +
+    _properties.map(p => {
+      const typeLabel = p.type ? ` (${PROP_TYPE_LABELS[p.type]||p.type})` : '';
+      return `<option value="${p.id}">${p.name||p.id}${typeLabel}</option>`;
+    }).join('');
+  document.getElementById('fProperty').innerHTML = opts;
+  document.getElementById('rProperty').innerHTML = opts;
+  // reset room dropdowns
+  document.getElementById('fRoom').innerHTML = '<option value="">— Pilih Kamar —</option>';
+  document.getElementById('rNumber').innerHTML = '<option value="">— Pilih —</option>';
+}
+
+// ════════════════════
+//  MODAL PROPERTI
+// ════════════════════
+function selectPropType(type){
+  _selectedPropType = type;
+  document.getElementById('pType').value = type;
+  ['putra','putri','campur'].forEach(t => {
+    document.getElementById(`ptBtn-${t}`).classList.toggle('selected', t===type);
+  });
+}
+
+function openAddPropModal(){
+  document.getElementById('propModalTitle').textContent = '➕ Tambah Properti';
+  ['editPropId','pName','pAddress','pFacilities','pPhone','pRoomCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  selectPropType('putra');
+  document.getElementById('propModal').classList.add('open');
+}
+
+function openEditPropModal(id){
+  const p = _properties.find(x => x.id===id);
+  if(!p) return;
+  document.getElementById('propModalTitle').textContent = '✏️ Edit Properti';
+  document.getElementById('editPropId').value = id;
+  document.getElementById('pName').value = p.name||'';
+  document.getElementById('pAddress').value = p.address||'';
+  document.getElementById('pFacilities').value = (p.facilities||[]).join(', ');
+  document.getElementById('pPhone').value = p.phone||'';
+  document.getElementById('pRoomCount').value = p.roomCount||'';
+  selectPropType(p.type||'campur');
+  document.getElementById('propModal').classList.add('open');
+}
+
+function closePropModal(){ document.getElementById('propModal').classList.remove('open'); }
+
+async function saveProp(){
+  const id = document.getElementById('editPropId').value;
+  const name = document.getElementById('pName').value.trim();
+  const type = document.getElementById('pType').value;
+  const address = document.getElementById('pAddress').value.trim();
+  const facStr = document.getElementById('pFacilities').value.trim();
+  const phone = document.getElementById('pPhone').value.trim();
+  const roomCount = document.getElementById('pRoomCount').value;
+
+  if(!name || !address){ showToast('Nama dan alamat wajib diisi','error'); return; }
+
+  const facilities = facStr ? facStr.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const data = { name, type, address, facilities, phone, roomCount: Number(roomCount)||0, ownerId:'owner1' };
+
+  try {
+    if(id){
+      await _updateDoc(_docFn(_db,'properties',id), data);
+      showToast(`Properti "${name}" diperbarui`);
+    } else {
+      await _addDoc(_col(_db,'properties'), data);
+      showToast(`Properti "${name}" berhasil ditambahkan`);
+    }
+    closePropModal();
+    await reloadData();
+  } catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 
 // ════════════════════
 //  MODAL PENYEWA
 // ════════════════════
 function openAddTenantModal(){
-  document.getElementById('tenantModalTitle').textContent='➕ Tambah Penyewa';
-  ['editTenantId','fName','fPhone','fKtp','fStart'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fProperty').value='';
-  document.getElementById('fRoom').value='';
+  document.getElementById('tenantModalTitle').textContent = '➕ Tambah Penyewa';
+  ['editTenantId','fName','fPhone','fKtp','fStart'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('fProperty').value = '';
+  document.getElementById('fRoom').innerHTML = '<option value="">— Pilih Kamar —</option>';
   document.getElementById('tenantModal').classList.add('open');
 }
+
 function openEditTenantModal(id){
-  const t=_tenants.find(x=>x.id===id); if(!t)return;
-  document.getElementById('tenantModalTitle').textContent='✏️ Edit Penyewa';
-  document.getElementById('editTenantId').value=id;
-  document.getElementById('fName').value=t.name||'';
-  document.getElementById('fPhone').value=t.phone||'';
-  document.getElementById('fKtp').value=t.ktpNumber||'';
-  document.getElementById('fProperty').value=t.propertyId||'';
-  document.getElementById('fRoom').value=(t.roomId||'').replace('room','');
+  const t = _tenants.find(x => x.id===id);
+  if(!t) return;
+  document.getElementById('tenantModalTitle').textContent = '✏️ Edit Penyewa';
+  document.getElementById('editTenantId').value = id;
+  document.getElementById('fName').value = t.name||'';
+  document.getElementById('fPhone').value = t.phone||'';
+  document.getElementById('fKtp').value = t.ktpNumber||'';
+  document.getElementById('fProperty').value = t.propertyId||'';
+
+  // populate room dropdown for this property
+  if(t.propertyId){
+    const roomNum = (t.roomId||'').replace('room','');
+    document.getElementById('fRoom').innerHTML = buildRoomOptions(t.propertyId, roomNum);
+    document.getElementById('fRoom').value = roomNum;
+  }
+
   if(t.startDate){
-    const sd=t.startDate.toDate?t.startDate.toDate().toISOString().slice(0,10):t.startDate;
-    document.getElementById('fStart').value=sd;
+    try {
+      const sd = t.startDate.toDate ? t.startDate.toDate().toISOString().slice(0,10) : t.startDate;
+      document.getElementById('fStart').value = sd;
+    } catch(e){}
   }
   document.getElementById('tenantModal').classList.add('open');
 }
-function closeTenantModal(){document.getElementById('tenantModal').classList.remove('open');}
+
+function closeTenantModal(){ document.getElementById('tenantModal').classList.remove('open'); }
 
 async function saveTenant(){
-  const id=document.getElementById('editTenantId').value;
-  const name=document.getElementById('fName').value.trim();
-  const phone=document.getElementById('fPhone').value.trim();
-  const ktp=document.getElementById('fKtp').value.trim();
-  const propId=document.getElementById('fProperty').value;
-  const roomNum=document.getElementById('fRoom').value;
-  const start=document.getElementById('fStart').value;
-  if(!name||!phone||!propId||!roomNum||!start){showToast('Lengkapi semua field wajib (*)','error');return;}
-  const data={name,phone,ktpNumber:ktp,propertyId:propId,roomId:`room${roomNum}`,startDate:start,status:'active'};
-  try{
-    if(id){await _updateDoc(_docFn(_db,'tenants',id),data);showToast(`Data ${name} diperbarui`);}
-    else{await _addDoc(_col(_db,'tenants'),data);showToast(`Penyewa ${name} ditambahkan`);}
-    closeTenantModal(); await reloadData();
-  }catch(e){showToast('Gagal: '+e.message,'error');}
+  const id = document.getElementById('editTenantId').value;
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const ktp = document.getElementById('fKtp').value.trim();
+  const propId = document.getElementById('fProperty').value;
+  const roomNum = document.getElementById('fRoom').value;
+  const start = document.getElementById('fStart').value;
+
+  if(!name || !phone || !propId || !roomNum || !start){
+    showToast('Lengkapi semua field wajib (*)','error'); return;
+  }
+
+  const data = { name, phone, ktpNumber:ktp, propertyId:propId, roomId:`room${roomNum}`, startDate:start, status:'active' };
+  try {
+    if(id){
+      await _updateDoc(_docFn(_db,'tenants',id), data);
+      showToast(`Data ${name} diperbarui`);
+    } else {
+      await _addDoc(_col(_db,'tenants'), data);
+      showToast(`Penyewa ${name} ditambahkan`);
+    }
+    closeTenantModal();
+    await reloadData();
+  } catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 
 // ════════════════════
 //  MODAL KAMAR
 // ════════════════════
 function openAddRoomModal(){
-  document.getElementById('roomModalTitle').textContent='➕ Tambah Kamar';
-  ['editRoomId','editRoomPropId','rTenantId'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('rProperty').value='';
-  document.getElementById('rNumber').value='';
-  document.getElementById('rType').value='Standard';
-  document.getElementById('rPrice').value='';
-  document.getElementById('rStatus').value='vacant';
+  document.getElementById('roomModalTitle').textContent = '➕ Tambah Kamar';
+  ['editRoomId','editRoomPropId','rTenantId','rPrice'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('rProperty').value = '';
+  document.getElementById('rNumber').innerHTML = '<option value="">— Pilih —</option>';
+  document.getElementById('rType').value = 'Standard';
+  document.getElementById('rStatus').value = 'vacant';
   document.getElementById('roomModal').classList.add('open');
 }
-function openEditRoomModal(roomId,propId){
-  const r=_allRooms.find(x=>x.id===roomId&&x.propertyId===propId); if(!r)return;
-  document.getElementById('roomModalTitle').textContent='✏️ Edit Kamar';
-  document.getElementById('editRoomId').value=roomId;
-  document.getElementById('editRoomPropId').value=propId;
-  document.getElementById('rProperty').value=propId;
-  document.getElementById('rNumber').value=r.roomNumber||roomId.replace('room','');
-  document.getElementById('rType').value=r.type||'Standard';
-  document.getElementById('rPrice').value=r.price||'';
-  document.getElementById('rStatus').value=r.status||'vacant';
-  document.getElementById('rTenantId').value=r.currentTenantId||'';
+
+function openEditRoomModal(roomId, propId){
+  const r = _allRooms.find(x => x.id===roomId && x.propertyId===propId);
+  if(!r) return;
+  document.getElementById('roomModalTitle').textContent = '✏️ Edit Kamar';
+  document.getElementById('editRoomId').value = roomId;
+  document.getElementById('editRoomPropId').value = propId;
+  document.getElementById('rProperty').value = propId;
+
+  const roomNum = r.roomNumber || roomId.replace('room','');
+  document.getElementById('rNumber').innerHTML = buildRoomOptions(propId, roomNum);
+  document.getElementById('rNumber').value = roomNum;
+
+  document.getElementById('rType').value = r.type||'Standard';
+  document.getElementById('rPrice').value = r.price||'';
+  document.getElementById('rStatus').value = r.status||'vacant';
+  document.getElementById('rTenantId').value = r.currentTenantId||'';
   document.getElementById('roomModal').classList.add('open');
 }
-function closeRoomModal(){document.getElementById('roomModal').classList.remove('open');}
+
+function closeRoomModal(){ document.getElementById('roomModal').classList.remove('open'); }
 
 async function saveRoom(){
-  const editId=document.getElementById('editRoomId').value;
-  const editPropId=document.getElementById('editRoomPropId').value;
-  const propId=document.getElementById('rProperty').value;
-  const roomNum=document.getElementById('rNumber').value;
-  const type=document.getElementById('rType').value;
-  const price=document.getElementById('rPrice').value;
-  const status=document.getElementById('rStatus').value;
-  const tenantId=document.getElementById('rTenantId').value.trim();
-  if(!propId||!roomNum||!price){showToast('Lengkapi Properti, No. Kamar, dan Harga','error');return;}
-  const data={roomNumber:roomNum,type,price:Number(price),status,currentTenantId:tenantId};
-  try{
-    if(editId&&editPropId){
-      // edit: path sama atau berbeda?
-      const path=`properties/${editPropId}/rooms/${editId}`;
-      await _updateDoc(_docFn(_db,...path.split('/')),data);
+  const editId = document.getElementById('editRoomId').value;
+  const editPropId = document.getElementById('editRoomPropId').value;
+  const propId = document.getElementById('rProperty').value;
+  const roomNum = document.getElementById('rNumber').value;
+  const type = document.getElementById('rType').value;
+  const price = document.getElementById('rPrice').value;
+  const status = document.getElementById('rStatus').value;
+  const tenantId = document.getElementById('rTenantId').value.trim();
+
+  if(!propId || !roomNum || !price){
+    showToast('Lengkapi Properti, No. Kamar, dan Harga','error'); return;
+  }
+
+  const data = { roomNumber: roomNum, type, price: Number(price), status, currentTenantId: tenantId };
+
+  try {
+    if(editId && editPropId){
+      // FIX: gunakan argumen individual, bukan spread dari array split
+      await _updateDoc(_docFn(_db, 'properties', editPropId, 'rooms', editId), data);
       showToast('Kamar berhasil diperbarui');
     } else {
-      await _addDoc(_col(_db,'properties',propId,'rooms'),data);
+      await _addDoc(_col(_db, 'properties', propId, 'rooms'), data);
       showToast('Kamar berhasil ditambahkan');
     }
-    closeRoomModal(); await reloadData();
-  }catch(e){showToast('Gagal: '+e.message,'error');}
+    closeRoomModal();
+    await reloadData();
+  } catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 
 // ════════════════════
 //  CONFIRM & DELETE
 // ════════════════════
 function askDeleteTenant(id){
-  const t=_tenants.find(x=>x.id===id);
-  _pendingDelete={type:'tenant',id};
-  document.getElementById('confirmIcon').textContent='🗑️';
-  document.getElementById('confirmTitle').textContent='Hapus Penyewa?';
-  document.getElementById('confirmMsg').textContent=`Penyewa "${t?t.name:id}" akan dihapus permanen.`;
+  const t = _tenants.find(x => x.id===id);
+  _pendingDelete = {type:'tenant', id};
+  document.getElementById('confirmIcon').textContent = '🗑️';
+  document.getElementById('confirmTitle').textContent = 'Hapus Penyewa?';
+  document.getElementById('confirmMsg').textContent = `Penyewa "${t?t.name:id}" akan dihapus permanen.`;
   document.getElementById('confirmBox').classList.add('open');
 }
-function askDeleteRoom(roomId,propId){
-  const r=_allRooms.find(x=>x.id===roomId&&x.propertyId===propId);
-  _pendingDelete={type:'room',id:roomId,propId};
-  document.getElementById('confirmIcon').textContent='🚪';
-  document.getElementById('confirmTitle').textContent='Hapus Kamar?';
-  document.getElementById('confirmMsg').textContent=`Kamar ${r?r.roomNumber:roomId} di properti ini akan dihapus permanen.`;
+
+function askDeleteRoom(roomId, propId){
+  const r = _allRooms.find(x => x.id===roomId && x.propertyId===propId);
+  _pendingDelete = {type:'room', id:roomId, propId};
+  document.getElementById('confirmIcon').textContent = '🚪';
+  document.getElementById('confirmTitle').textContent = 'Hapus Kamar?';
+  document.getElementById('confirmMsg').textContent = `Kamar ${r?r.roomNumber:roomId} di properti ini akan dihapus permanen.`;
   document.getElementById('confirmBox').classList.add('open');
 }
-function closeConfirm(){_pendingDelete=null;document.getElementById('confirmBox').classList.remove('open');}
+
+function askDeleteProp(id){
+  const p = _properties.find(x => x.id===id);
+  _pendingDelete = {type:'property', id};
+  document.getElementById('confirmIcon').textContent = '🏠';
+  document.getElementById('confirmTitle').textContent = 'Hapus Properti?';
+  document.getElementById('confirmMsg').textContent = `Properti "${p?p.name:id}" akan dihapus. Semua kamar di properti ini juga ikut terhapus.`;
+  document.getElementById('confirmBox').classList.add('open');
+}
+
+function closeConfirm(){ _pendingDelete=null; document.getElementById('confirmBox').classList.remove('open'); }
 
 async function runDelete(){
-  if(!_pendingDelete)return;
-  try{
+  if(!_pendingDelete) return;
+  try {
     if(_pendingDelete.type==='tenant'){
       await _deleteDoc(_docFn(_db,'tenants',_pendingDelete.id));
       showToast('Penyewa berhasil dihapus');
-    } else {
+    } else if(_pendingDelete.type==='room'){
       await _deleteDoc(_docFn(_db,'properties',_pendingDelete.propId,'rooms',_pendingDelete.id));
       showToast('Kamar berhasil dihapus');
+    } else if(_pendingDelete.type==='property'){
+      // hapus semua kamar dulu, baru properti
+      const propRooms = _allRooms.filter(r => r.propertyId===_pendingDelete.id);
+      await Promise.all(propRooms.map(r =>
+        _deleteDoc(_docFn(_db,'properties',_pendingDelete.id,'rooms',r.id))
+      ));
+      await _deleteDoc(_docFn(_db,'properties',_pendingDelete.id));
+      showToast('Properti berhasil dihapus');
     }
-    closeConfirm(); await reloadData();
-  }catch(e){showToast('Gagal menghapus: '+e.message,'error');closeConfirm();}
+    closeConfirm();
+    await reloadData();
+  } catch(e){ showToast('Gagal menghapus: '+e.message,'error'); closeConfirm(); }
 }
 
 // ════════════════════
 //  RENDER
 // ════════════════════
 function renderRooms(tenantMap){
-  document.getElementById('roomCount').textContent=_allRooms.length;
-  document.getElementById('roomsBody').innerHTML=_allRooms.length===0
+  document.getElementById('roomCount').textContent = _allRooms.length;
+  document.getElementById('roomsBody').innerHTML = _allRooms.length===0
     ? emptyRow(7,'Belum ada kamar')
-    : _allRooms.map(r=>{
-        const t=r.currentTenantId?tenantMap[r.currentTenantId]:null;
+    : _allRooms.map(r => {
+        const t = r.currentTenantId ? tenantMap[r.currentTenantId] : null;
         return `<tr>
           <td><span class="room-num">${r.roomNumber||r.id}</span></td>
           <td>${r.propertyName||r.propertyId}</td>
@@ -645,11 +856,11 @@ function renderRooms(tenantMap){
 }
 
 function renderTenants(){
-  document.getElementById('tenantCount').textContent=_tenants.length;
-  document.getElementById('tenantsBody').innerHTML=_tenants.length===0
+  document.getElementById('tenantCount').textContent = _tenants.length;
+  document.getElementById('tenantsBody').innerHTML = _tenants.length===0
     ? emptyRow(7,'Belum ada penyewa')
-    : _tenants.map(t=>{
-        const prop=_properties.find(p=>p.id===t.propertyId);
+    : _tenants.map(t => {
+        const prop = _properties.find(p => p.id===t.propertyId);
         return `<tr>
           <td><strong>${t.name}</strong></td>
           <td>${t.phone||'—'}</td>
@@ -669,53 +880,61 @@ function renderTenants(){
 //  LOAD DATA
 // ════════════════════
 async function reloadData(){
-  const [propSnap,tenantSnap,paySnap,maintSnap]=await Promise.all([
+  const [propSnap, tenantSnap, paySnap, maintSnap] = await Promise.all([
     _getDocs(_col(_db,'properties')),
     _getDocs(_col(_db,'tenants')),
     _getDocs(_col(_db,'payments')),
     _getDocs(_col(_db,'maintenanceRequests')),
   ]);
-  _properties=propSnap.docs.map(d=>({id:d.id,...d.data()}));
-  _tenants=tenantSnap.docs.map(d=>({id:d.id,...d.data()}));
-  _payments=paySnap.docs.map(d=>({id:d.id,...d.data()}));
-  _maints=maintSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-  _allRooms=[];
+  _properties = propSnap.docs.map(d => ({id:d.id, ...d.data()}));
+  _tenants    = tenantSnap.docs.map(d => ({id:d.id, ...d.data()}));
+  _payments   = paySnap.docs.map(d => ({id:d.id, ...d.data()}));
+  _maints     = maintSnap.docs.map(d => ({id:d.id, ...d.data()}));
+
+  _allRooms = [];
   for(const prop of _properties){
-    const rs=await _getDocs(_col(_db,'properties',prop.id,'rooms'));
-    rs.docs.forEach(r=>_allRooms.push({id:r.id,propertyId:prop.id,propertyName:prop.name,...r.data()}));
+    const rs = await _getDocs(_col(_db,'properties',prop.id,'rooms'));
+    rs.docs.forEach(r => _allRooms.push({id:r.id, propertyId:prop.id, propertyName:prop.name, ...r.data()}));
   }
 
-  const tenantMap={};
-  _tenants.forEach(t=>tenantMap[t.id]=t);
+  const tenantMap = {};
+  _tenants.forEach(t => tenantMap[t.id] = t);
 
   fillPropSelects();
 
-  // STATS
-  const occupied=_allRooms.filter(r=>r.status==='occupied').length;
-  const unpaidPay=_payments.filter(p=>p.status==='unpaid');
-  const unpaidAmt=unpaidPay.reduce((s,p)=>s+Number(p.amount||0),0);
-  const openMaint=_maints.filter(m=>m.status==='open').length;
-  document.getElementById('statRooms').textContent=_allRooms.length;
-  document.getElementById('statOccupied').textContent=occupied;
-  document.getElementById('statPct').textContent=`${Math.round(occupied/(_allRooms.length||1)*100)}% terisi`;
-  document.getElementById('statUnpaid').textContent=unpaidPay.length;
-  document.getElementById('statAmt').textContent=fmt(unpaidAmt);
-  document.getElementById('statMaint').textContent=openMaint;
+  // ── STATS ──
+  const occupied = _allRooms.filter(r => r.status==='occupied').length;
+  const unpaidPay = _payments.filter(p => p.status==='unpaid');
+  const unpaidAmt = unpaidPay.reduce((s,p) => s + Number(p.amount||0), 0);
+  const openMaint = _maints.filter(m => m.status==='open').length;
 
-  // PROPERTY CARDS
-  document.getElementById('propCount').textContent=_properties.length;
-  const grid=document.getElementById('propertyGrid');
-  grid.innerHTML=_properties.length===0
-    ? emptyRow(1,'Belum ada properti')
-    : _properties.map(prop=>{
-        const propRooms=_allRooms.filter(r=>r.propertyId===prop.id);
-        const occ=propRooms.filter(r=>r.status==='occupied').length;
-        const pct=propRooms.length?Math.round(occ/propRooms.length*100):0;
-        const bc=pct===100?'full':pct>0?'partial':'empty';
-        const facs=(prop.facilities||[]).map(f=>`<span class="facility-tag">${f}</span>`).join('');
-        const rows=propRooms.map(r=>{
-          const t=r.currentTenantId?tenantMap[r.currentTenantId]:null;
+  document.getElementById('statRooms').textContent    = _allRooms.length;
+  document.getElementById('statOccupied').textContent = occupied;
+  document.getElementById('statPct').textContent      = `${Math.round(occupied/(_allRooms.length||1)*100)}% terisi`;
+  document.getElementById('statUnpaid').textContent   = unpaidPay.length;
+  document.getElementById('statAmt').textContent      = fmt(unpaidAmt);
+  document.getElementById('statMaint').textContent    = openMaint;
+
+  // ── PROPERTY CARDS ──
+  document.getElementById('propCount').textContent = _properties.length;
+  const grid = document.getElementById('propertyGrid');
+  grid.innerHTML = _properties.length===0
+    ? `<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">
+        🐱 Belum ada properti.
+        <br><br>
+        <button class="btn btn-primary" onclick="openAddPropModal()">➕ Tambah Properti Pertama</button>
+      </div>`
+    : _properties.map(prop => {
+        const propRooms = _allRooms.filter(r => r.propertyId===prop.id);
+        const occ = propRooms.filter(r => r.status==='occupied').length;
+        const pct = propRooms.length ? Math.round(occ/propRooms.length*100) : 0;
+        const bc = pct===100?'full':pct>0?'partial':'empty';
+        const facs = (prop.facilities||[]).map(f => `<span class="facility-tag">${f}</span>`).join('');
+        const typeTag = propTypeTag(prop.type);
+
+        const rows = propRooms.map(r => {
+          const t = r.currentTenantId ? tenantMap[r.currentTenantId] : null;
           return `<tr>
             <td><span class="room-num">${r.roomNumber||r.id}</span></td>
             <td>${r.type||'—'}</td>
@@ -723,16 +942,23 @@ async function reloadData(){
             <td><span class="pill ${r.status}">${r.status}</span></td>
             <td>${t?t.name:'—'}</td>
           </tr>`;
-        }).join('')||emptyRow(5,'Belum ada kamar');
+        }).join('') || emptyRow(5,'Belum ada kamar');
+
         return `<div class="prop-card">
           <div class="cat-peek-card">😼</div>
           <div class="prop-card-header">
             <div>
-              <div class="prop-name">🏠 ${prop.name}</div>
+              <div class="prop-name">🏠 ${prop.name}${typeTag}</div>
               <div class="prop-address">${prop.address||''}</div>
               <div class="prop-facilities">${facs}</div>
             </div>
-            <div class="occ-badge ${bc}">${occ}/${propRooms.length}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+              <div class="occ-badge ${bc}">${occ}/${propRooms.length}</div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-edit btn-sm" onclick="openEditPropModal('${prop.id}')">✏️</button>
+                <button class="btn btn-danger btn-sm" onclick="askDeleteProp('${prop.id}')">🗑️</button>
+              </div>
+            </div>
           </div>
           <div class="scroll-x">
             <table class="rooms-table">
@@ -743,18 +969,19 @@ async function reloadData(){
         </div>`;
       }).join('');
 
-  // ROOMS & TENANTS
+  // ── ROOMS & TENANTS ──
   renderRooms(tenantMap);
   renderTenants();
 
-  // PAYMENTS
-  const paidPay=_payments.filter(p=>p.status==='paid');
-  document.getElementById('unpaidCount').textContent=unpaidPay.length;
-  document.getElementById('paidCount').textContent=paidPay.length;
+  // ── PAYMENTS ──
+  const paidPay = _payments.filter(p => p.status==='paid');
+  document.getElementById('unpaidCount').textContent = unpaidPay.length;
+  document.getElementById('paidCount').textContent   = paidPay.length;
+
   function payRows(list){
-    if(!list.length)return emptyRow(5,'Tidak ada data');
-    return list.map(p=>{
-      const t=tenantMap[p.tenantId];
+    if(!list.length) return emptyRow(5,'Tidak ada data');
+    return list.map(p => {
+      const t = tenantMap[p.tenantId];
       return `<tr>
         <td>${t?t.name:(p.tenantId||'—')}</td>
         <td><span class="room-num">${t?(t.roomId||'—'):'—'}</span></td>
@@ -764,15 +991,15 @@ async function reloadData(){
       </tr>`;
     }).join('');
   }
-  document.getElementById('unpaidBody').innerHTML=payRows(unpaidPay);
-  document.getElementById('paidBody').innerHTML=payRows(paidPay);
+  document.getElementById('unpaidBody').innerHTML = payRows(unpaidPay);
+  document.getElementById('paidBody').innerHTML   = payRows(paidPay);
 
-  // MAINTENANCE
-  document.getElementById('maintCount').textContent=_maints.length;
-  document.getElementById('maintBody').innerHTML=_maints.length===0
+  // ── MAINTENANCE ──
+  document.getElementById('maintCount').textContent = _maints.length;
+  document.getElementById('maintBody').innerHTML = _maints.length===0
     ? emptyRow(6,'Tidak ada permintaan perbaikan')
-    : _maints.map(m=>{
-        const t=tenantMap[m.tenantId];
+    : _maints.map(m => {
+        const t = tenantMap[m.tenantId];
         return `<tr>
           <td>${m.description||'—'}</td>
           <td><span class="room-num">${m.roomId||'—'}</span></td>
@@ -785,23 +1012,27 @@ async function reloadData(){
 }
 
 // ── INIT ──
-window.addEventListener('firebase-ready',async()=>{
-  _db=window.__db;
-  const m=window.__fbModules;
-  _col=m.collection; _getDocs=m.getDocs; _addDoc=m.addDoc;
-  _updateDoc=m.updateDoc; _deleteDoc=m.deleteDoc; _docFn=m.doc;
-  try{await reloadData();}
-  catch(err){
-    console.error('Firebase error:',err);
-    document.getElementById('propertyGrid').innerHTML=
+window.addEventListener('firebase-ready', async () => {
+  _db = window.__db;
+  const m = window.__fbModules;
+  _col = m.collection; _getDocs = m.getDocs; _addDoc = m.addDoc;
+  _updateDoc = m.updateDoc; _deleteDoc = m.deleteDoc; _docFn = m.doc;
+  _serverTimestamp = m.serverTimestamp;
+
+  try {
+    await reloadData();
+  } catch(err) {
+    console.error('Firebase error:', err);
+    document.getElementById('propertyGrid').innerHTML =
       `<div style="padding:32px;color:var(--warn);font-size:13px;">⚠️ Gagal memuat data: ${err.message}</div>`;
   }
 });
 
-// close modal klik overlay
-document.getElementById('tenantModal').addEventListener('click',function(e){if(e.target===this)closeTenantModal();});
-document.getElementById('roomModal').addEventListener('click',function(e){if(e.target===this)closeRoomModal();});
-document.getElementById('confirmBox').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+// ── CLOSE MODAL KLIK OVERLAY ──
+document.getElementById('tenantModal').addEventListener('click', function(e){ if(e.target===this) closeTenantModal(); });
+document.getElementById('roomModal').addEventListener('click',   function(e){ if(e.target===this) closeRoomModal(); });
+document.getElementById('propModal').addEventListener('click',   function(e){ if(e.target===this) closePropModal(); });
+document.getElementById('confirmBox').addEventListener('click',  function(e){ if(e.target===this) closeConfirm(); });
 </script>
 </body>
 </html>
