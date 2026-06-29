@@ -1,327 +1,205 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Dashboard Pemilik KosKita</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
+    <title>KosKita Dashboard</title>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
-}
+    <link rel="stylesheet" href="style.css">
 
-body{
-background:#eef3ff;
-padding:30px;
-}
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
-h1{
-text-align:center;
-color:#1e3a8a;
-margin-bottom:30px;
-}
-
-.container{
-max-width:1200px;
-margin:auto;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 3px 10px rgba(0,0,0,.1);
-margin-bottom:25px;
-}
-
-.card h2{
-color:#2563eb;
-margin-bottom:10px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px;
-}
-
-th{
-background:#2563eb;
-color:white;
-padding:10px;
-}
-
-td{
-padding:10px;
-border-bottom:1px solid #ddd;
-text-align:center;
-}
-
-.status-occupied{
-color:red;
-font-weight:bold;
-}
-
-.status-available{
-color:green;
-font-weight:bold;
-}
-
-.status-maintenance{
-color:orange;
-font-weight:bold;
-}
-
-.unpaid{
-color:red;
-font-weight:bold;
-}
-
-.paid{
-color:green;
-font-weight:bold;
-}
-
-</style>
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
 </head>
 
 <body>
 
-<div class="container">
+    <!-- Sidebar -->
 
-<h1>Dashboard Pemilik KosKita</h1>
+    <aside class="sidebar">
 
-<div id="properties"></div>
+        <div class="logo">
+            <i class="fa-solid fa-house"></i>
+            <span>KosKita</span>
+        </div>
 
-<div class="card">
+        <ul>
 
-<h2>Tagihan Belum Dibayar</h2>
+            <li class="active">
+                <i class="fa-solid fa-chart-line"></i>
+                Dashboard
+            </li>
 
-<table>
+            <li>
+                <i class="fa-solid fa-building"></i>
+                Properti
+            </li>
 
-<thead>
+            <li>
+                <i class="fa-solid fa-bed"></i>
+                Kamar
+            </li>
 
-<tr>
+            <li>
+                <i class="fa-solid fa-users"></i>
+                Penyewa
+            </li>
 
-<th>Tenant</th>
-<th>Property</th>
-<th>Bulan</th>
-<th>Jumlah</th>
-<th>Status</th>
+            <li>
+                <i class="fa-solid fa-money-bill-wave"></i>
+                Pembayaran
+            </li>
 
-</tr>
+        </ul>
 
-</thead>
+    </aside>
 
-<tbody id="paymentTable">
+    <!-- Main -->
 
-</tbody>
+    <main>
 
-</table>
+        <header>
 
-</div>
+            <div>
 
-</div>
+                <h1>Dashboard Pemilik Kos</h1>
+                <p>Monitoring Properti KosKita</p>
 
-<script type="module">
+            </div>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+            <div class="profile">
 
-import {
+                <i class="fa-solid fa-user"></i>
 
-getFirestore,
-collection,
-onSnapshot,
-query,
-where
+                <span>Pemilik</span>
 
-} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+            </div>
 
-const firebaseConfig = {
+        </header>
 
-apiKey: "AIzaSyBJgzx2t4kSdqcrId0MB1YYx9YjEi7iL_U",
+        <!-- Statistik -->
 
-authDomain: "koskita-app-f69ad.firebaseapp.com",
+        <section class="cards">
 
-projectId: "koskita-app-f69ad",
+            <div class="card blue">
 
-storageBucket: "koskita-app-f69ad.firebasestorage.app",
+                <i class="fa-solid fa-building"></i>
 
-messagingSenderId: "502984689733",
+                <div>
 
-appId: "1:502984689733:web:74f6db34e626cd989efb2c"
+                    <h2 id="totalProperty">0</h2>
 
-};
+                    <p>Total Properti</p>
 
-const app = initializeApp(firebaseConfig);
+                </div>
 
-const db = getFirestore(app);
+            </div>
 
-const propertiesDiv = document.getElementById("properties");
+            <div class="card green">
 
-const paymentTable = document.getElementById("paymentTable");
+                <i class="fa-solid fa-bed"></i>
 
+                <div>
 
-// ==========================
-// MENAMPILKAN PROPERTI
-// ==========================
+                    <h2 id="totalRoom">0</h2>
 
-onSnapshot(collection(db,"properties"),(snapshot)=>{
+                    <p>Total Kamar</p>
 
-propertiesDiv.innerHTML="";
+                </div>
 
-snapshot.forEach((property)=>{
+            </div>
 
-const data=property.data();
+            <div class="card orange">
 
-const card=document.createElement("div");
+                <i class="fa-solid fa-user-check"></i>
 
-card.className="card";
+                <div>
 
-card.innerHTML=`
+                    <h2 id="occupiedRoom">0</h2>
 
-<h2>${data.name}</h2>
+                    <p>Kamar Terisi</p>
 
-<p><b>Alamat :</b> ${data.address}</p>
+                </div>
 
-<p><b>Fasilitas :</b> ${data.facilities.join(", ")}</p>
+            </div>
 
-<table>
+            <div class="card red">
 
-<thead>
+                <i class="fa-solid fa-file-invoice-dollar"></i>
 
-<tr>
+                <div>
 
-<th>No Kamar</th>
+                    <h2 id="totalUnpaid">0</h2>
 
-<th>Tipe</th>
+                    <p>Tagihan Tertunggak</p>
 
-<th>Harga</th>
+                </div>
 
-<th>Status</th>
+            </div>
 
-</tr>
+        </section>
 
-</thead>
+        <!-- Properti -->
 
-<tbody id="room-${property.id}">
+        <section class="panel">
 
-<tr>
+            <div class="panel-header">
 
-<td colspan="4">Loading...</td>
+                <h2>Daftar Properti & Kamar</h2>
 
-</tr>
+            </div>
 
-</tbody>
+            <div id="propertyContainer">
 
-</table>
+            </div>
 
-`;
+        </section>
 
-propertiesDiv.appendChild(card);
+        <!-- Tagihan -->
 
+        <section class="panel">
 
-// ==========================
-// SUB COLLECTION ROOMS
-// ==========================
+            <div class="panel-header">
 
-onSnapshot(
+                <h2>Tagihan Belum Dibayar</h2>
 
-collection(db,"properties",property.id,"rooms"),
+            </div>
 
-(roomSnapshot)=>{
+            <table>
 
-let roomHTML="";
+                <thead>
 
-roomSnapshot.forEach((room)=>{
+                    <tr>
 
-const r=room.data();
+                        <th>Tenant</th>
+                        <th>Properti</th>
+                        <th>Bulan</th>
+                        <th>Jumlah</th>
+                        <th>Status</th>
 
-let warna="";
+                    </tr>
 
-if(r.status=="occupied") warna="status-occupied";
+                </thead>
 
-if(r.status=="available") warna="status-available";
+                <tbody id="paymentBody">
 
-if(r.status=="maintenance") warna="status-maintenance";
+                </tbody>
 
-roomHTML+=`
+            </table>
 
-<tr>
+        </section>
 
-<td>${r.roomNumber}</td>
+    </main>
 
-<td>${r.type}</td>
-
-<td>Rp ${Number(r.price).toLocaleString("id-ID")}</td>
-
-<td class="${warna}">${r.status}</td>
-
-</tr>
-
-`;
-
-});
-
-document.getElementById("room-"+property.id).innerHTML=roomHTML;
-
-});
-
-});
-
-});
-
-
-
-// ==========================
-// TAGIHAN BELUM DIBAYAR
-// ==========================
-
-const unpaidQuery=query(
-
-collection(db,"payments"),
-
-where("status","==","unpaid")
-
-);
-
-onSnapshot(unpaidQuery,(snapshot)=>{
-
-paymentTable.innerHTML="";
-
-snapshot.forEach((payment)=>{
-
-const p=payment.data();
-
-paymentTable.innerHTML+=`
-
-<tr>
-
-<td>${p.tenantId}</td>
-
-<td>${p.propertyId}</td>
-
-<td>${p.month}</td>
-
-<td>Rp ${Number(p.amount).toLocaleString("id-ID")}</td>
-
-<td class="unpaid">${p.status}</td>
-
-</tr>
-
-`;
-
-});
-
-});
-
-</script>
+    <script type="module" src="app.js"></script>
 
 </body>
 
