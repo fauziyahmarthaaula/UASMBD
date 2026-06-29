@@ -114,9 +114,9 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 .room-num{font-family:'DM Mono',monospace;font-weight:500;font-size:13px;}
 .price-text{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--green);}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;font-family:'DM Mono',monospace;}
-.pill.occupied{background:var(--accent-bg);color:var(--accent);}
-.pill.vacant{background:rgba(255,255,255,.07);color:var(--muted);}
-.pill.maintenance{background:var(--warn-bg);color:var(--warn);}
+.pill.Terisi{background:var(--accent-bg);color:var(--accent);}
+.pill.Kosong{background:rgba(255,255,255,.07);color:var(--muted);}
+.pill.Perbaikan{background:var(--warn-bg);color:var(--warn);}
 .pill.unpaid{background:var(--warn-bg);color:var(--warn);}
 .pill.paid{background:var(--green-bg);color:var(--green);}
 .pill.open{background:var(--warn-bg);color:var(--warn);}
@@ -306,9 +306,9 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       <div class="form-row">
         <div class="form-group"><label>Status *</label>
           <select id="rStatus">
-            <option value="vacant">Vacant</option>
-            <option value="occupied">Occupied</option>
-            <option value="maintenance">Maintenance</option>
+            <option value="Kosong">Kosong</option>
+            <option value="Terisi">Terisi</option>
+            <option value="Perbaikan">Perbaikan</option>
           </select>
         </div>
         <div class="form-group"><label>ID Penyewa (opsional)</label><input type="text" id="rTenantId" placeholder="cth. tenant_badrus"/></div>
@@ -380,7 +380,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       <a onclick="showPanel('rooms',this)"><span class="nav-icon">🚪</span> Kamar</a>
       <a onclick="showPanel('tenants',this)"><span class="nav-icon">👤</span> Penyewa</a>
       <a onclick="showPanel('payments',this)"><span class="nav-icon">💳</span> Pembayaran</a>
-      <a onclick="showPanel('maintenance',this)"><span class="nav-icon">🔧</span> Perbaikan</a>
+      <a onclick="showPanel('Perbaikan',this)"><span class="nav-icon">🔧</span> Perbaikan</a>
     </nav>
     <div class="sidebar-cats">
       <div class="sidebar-cat-img" style="animation:bobble 3s ease-in-out infinite;display:inline-block;">😸</div>
@@ -403,7 +403,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
     <div id="panel-overview" class="section-panel active">
       <div class="stats-row">
         <div class="stat-card blue"><div class="stat-icon">🛏️</div><div class="stat-info"><div class="label">Total Kamar</div><div class="value" id="statRooms">—</div><div class="meta">di semua properti</div></div></div>
-        <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-info"><div class="label">Terisi</div><div class="value" id="statOccupied">—</div><div class="meta" id="statPct">dari total kamar</div></div></div>
+        <div class="stat-card green"><div class="stat-icon">👥</div><div class="stat-info"><div class="label">Terisi</div><div class="value" id="statTerisi">—</div><div class="meta" id="statPct">dari total kamar</div></div></div>
         <div class="stat-card warn"><div class="stat-icon">💰</div><div class="stat-info"><div class="label">Tagihan Tertunggak</div><div class="value" id="statUnpaid">—</div><div class="meta" id="statAmt">total nominal</div></div></div>
         <div class="stat-card purple"><div class="stat-icon">🔧</div><div class="stat-info"><div class="label">Perbaikan Terbuka</div><div class="value" id="statMaint">—</div><div class="meta">permintaan aktif</div></div></div>
       </div>
@@ -475,7 +475,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
     </div>
 
     <!-- PERBAIKAN -->
-    <div id="panel-maintenance" class="section-panel">
+    <div id="panel-Perbaikan" class="section-panel">
       <div class="section">
         <div class="section-title">🔧 Permintaan Perbaikan <span class="count-pill" id="maintCount">0</span></div>
         <div class="card-table scroll-x">
@@ -507,7 +507,7 @@ function showPanel(name, el){
     rooms:['Daftar Kamar','Status hunian semua kamar'],
     tenants:['Data Penyewa','Penyewa aktif saat ini'],
     payments:['Pembayaran','Tagihan dan riwayat pembayaran'],
-    maintenance:['Perbaikan','Permintaan perbaikan & perawatan'],
+    Perbaikan:['Perbaikan','Permintaan perbaikan & perawatan'],
   };
   document.getElementById('pageTitle').textContent = t[name][0];
   document.getElementById('pageSubtitle').textContent = t[name][1];
@@ -721,7 +721,7 @@ function openAddRoomModal(){
   document.getElementById('rProperty').value = '';
   document.getElementById('rNumber').innerHTML = '<option value="">— Pilih —</option>';
   document.getElementById('rType').value = 'Standard';
-  document.getElementById('rStatus').value = 'vacant';
+  document.getElementById('rStatus').value = 'Kosong';
   document.getElementById('roomModal').classList.add('open');
 }
 
@@ -739,7 +739,7 @@ function openEditRoomModal(roomId, propId){
 
   document.getElementById('rType').value = r.type||'Standard';
   document.getElementById('rPrice').value = r.price||'';
-  document.getElementById('rStatus').value = r.status||'vacant';
+  document.getElementById('rStatus').value = r.status||'Kosong';
   document.getElementById('rTenantId').value = r.currentTenantId||'';
   document.getElementById('roomModal').classList.add('open');
 }
@@ -884,7 +884,7 @@ async function reloadData(){
     _getDocs(_col(_db,'properties')),
     _getDocs(_col(_db,'tenants')),
     _getDocs(_col(_db,'payments')),
-    _getDocs(_col(_db,'maintenanceRequests')),
+    _getDocs(_col(_db,'PerbaikanRequests')),
   ]);
 
   _properties = propSnap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -904,14 +904,14 @@ async function reloadData(){
   fillPropSelects();
 
   // ── STATS ──
-  const occupied = _allRooms.filter(r => r.status==='occupied').length;
+  const Terisi = _allRooms.filter(r => r.status==='Terisi').length;
   const unpaidPay = _payments.filter(p => p.status==='unpaid');
   const unpaidAmt = unpaidPay.reduce((s,p) => s + Number(p.amount||0), 0);
   const openMaint = _maints.filter(m => m.status==='open').length;
 
   document.getElementById('statRooms').textContent    = _allRooms.length;
-  document.getElementById('statOccupied').textContent = occupied;
-  document.getElementById('statPct').textContent      = `${Math.round(occupied/(_allRooms.length||1)*100)}% terisi`;
+  document.getElementById('statTerisi').textContent = Terisi;
+  document.getElementById('statPct').textContent      = `${Math.round(Terisi/(_allRooms.length||1)*100)}% terisi`;
   document.getElementById('statUnpaid').textContent   = unpaidPay.length;
   document.getElementById('statAmt').textContent      = fmt(unpaidAmt);
   document.getElementById('statMaint').textContent    = openMaint;
@@ -927,7 +927,7 @@ async function reloadData(){
       </div>`
     : _properties.map(prop => {
         const propRooms = _allRooms.filter(r => r.propertyId===prop.id);
-        const occ = propRooms.filter(r => r.status==='occupied').length;
+        const occ = propRooms.filter(r => r.status==='Terisi').length;
         const pct = propRooms.length ? Math.round(occ/propRooms.length*100) : 0;
         const bc = pct===100?'full':pct>0?'partial':'empty';
         const facs = (prop.facilities||[]).map(f => `<span class="facility-tag">${f}</span>`).join('');
@@ -994,7 +994,7 @@ async function reloadData(){
   document.getElementById('unpaidBody').innerHTML = payRows(unpaidPay);
   document.getElementById('paidBody').innerHTML   = payRows(paidPay);
 
-  // ── MAINTENANCE ──
+  // ── Perbaikan ──
   document.getElementById('maintCount').textContent = _maints.length;
   document.getElementById('maintBody').innerHTML = _maints.length===0
     ? emptyRow(6,'Tidak ada permintaan perbaikan')
