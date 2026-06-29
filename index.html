@@ -172,16 +172,17 @@ nav a .nav-icon{
 nav a.active .nav-icon{background:rgba(90,171,255,.2);}
 
 .sidebar-cats{
-  padding:0 16px 8px;
+  padding:8px 16px 10px;
   display:flex;
-  flex-direction:column;
-  gap:4px;
+  flex-direction:row;
+  justify-content:center;
+  gap:6px;
 }
 
 .sidebar-cat-img{
-  font-size:36px;
+  font-size:30px;
   text-align:center;
-  opacity:.7;
+  opacity:.75;
 }
 
 .sidebar-footer{
@@ -468,20 +469,59 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
   pointer-events:none;z-index:100;
   filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));
 }
-@keyframes peekup{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+@keyframes peekup{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(8px);}}
 
+/* sudut bawah */
 .cat-corner{
   position:fixed;
-  font-size:72px;
   pointer-events:none;
-  z-index:0;
-  opacity:.45;
+  z-index:2;
   filter:drop-shadow(0 4px 16px rgba(0,0,0,.5));
 }
-.cat-corner.bl{bottom:16px;left:16px;animation:sway 4s ease-in-out infinite;}
-.cat-corner.br{bottom:16px;right:16px;font-size:80px;animation:sway 5s ease-in-out infinite reverse;}
+.cat-corner.bl{bottom:12px;left:12px;font-size:72px;opacity:.55;animation:sway 4s ease-in-out infinite;}
+.cat-corner.br{bottom:12px;right:12px;font-size:80px;opacity:.55;animation:sway 5s ease-in-out infinite reverse;}
 
-@keyframes sway{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+/* samping layar */
+.cat-side{
+  position:fixed;
+  pointer-events:none;
+  z-index:2;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,.45));
+}
+.cat-side.left{left:0px;top:42%;font-size:54px;opacity:.45;animation:peekleft 5s ease-in-out infinite;}
+.cat-side.right{right:0px;top:32%;font-size:54px;opacity:.45;animation:peekright 6s ease-in-out infinite;}
+
+/* kucing di dekat header */
+.cat-header{
+  position:fixed;
+  pointer-events:none;
+  z-index:2;
+  font-size:40px;
+  opacity:.5;
+  top:18px;
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.4));
+}
+.cat-header.h1{right:calc(50% + 120px);animation:bobble 3.5s ease-in-out infinite;}
+.cat-header.h2{left:calc(50% + 120px);animation:bobble 3.5s ease-in-out infinite .8s;}
+
+/* kucing mengintip dari atas card */
+.cat-peek-card{
+  position:absolute;
+  top:-22px;right:18px;
+  font-size:32px;
+  pointer-events:none;
+  animation:peekup-sm 2.8s ease-in-out infinite;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));
+  z-index:5;
+}
+@keyframes peekup-sm{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
+
+.prop-card{position:relative;}
+
+@keyframes sway{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg);}}
+@keyframes peekleft{0%,100%{transform:translateX(-8px);}50%{transform:translateX(4px);}}
+@keyframes peekright{0%,100%{transform:translateX(8px);}50%{transform:translateX(-4px);}}
+@keyframes bobble{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-6px) rotate(5deg);}}
 
 .star-deco{
   position:fixed;font-size:18px;pointer-events:none;z-index:0;opacity:.5;
@@ -517,6 +557,18 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 <!-- DECORATIONS -->
 <div class="cat-top">🐱</div>
 
+<!-- kucing header kiri & kanan -->
+<div class="cat-header h1">😸</div>
+<div class="cat-header h2">😺</div>
+
+<!-- kucing mengintip dari samping layar -->
+<div class="cat-side left">🐈</div>
+<div class="cat-side right">🐈‍⬛</div>
+
+<!-- kucing sudut bawah -->
+<div class="cat-corner bl">😻</div>
+<div class="cat-corner br">🐱</div>
+
 <span class="star-deco">⭐</span>
 <span class="star-deco">⭐</span>
 <span class="star-deco">⭐</span>
@@ -531,9 +583,6 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 <div class="paw-deco" style="top:70%;left:30%;">🐾</div>
 <div class="paw-deco" style="top:30%;right:15%;">🐾</div>
 <div class="paw-deco" style="bottom:35%;right:10%;">🐾</div>
-
-<div class="cat-corner bl">🐈</div>
-<div class="cat-corner br">🐈‍⬛</div>
 
 <div class="layout">
   <!-- SIDEBAR -->
@@ -559,11 +608,13 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
         <span class="nav-icon">💳</span> Pembayaran
       </a>
       <a onclick="showPanel('maintenance',this)">
-        <span class="nav-icon">🔧</span> Maintenance
+        <span class="nav-icon">🔧</span> Perbaikan
       </a>
     </nav>
     <div class="sidebar-cats">
-      <div class="sidebar-cat-img">😸</div>
+      <div class="sidebar-cat-img" style="animation:bobble 3s ease-in-out infinite;display:inline-block;">😸</div>
+      <div class="sidebar-cat-img" style="font-size:28px;animation:bobble 3s ease-in-out infinite .6s;display:inline-block;">🐾</div>
+      <div class="sidebar-cat-img" style="animation:bobble 3s ease-in-out infinite 1.2s;display:inline-block;">😺</div>
     </div>
     <div class="sidebar-footer">🐾 koskita-app · owner1</div>
   </aside>
@@ -608,7 +659,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
         <div class="stat-card purple">
           <div class="stat-icon">🔧</div>
           <div class="stat-info">
-            <div class="label">Maintenance Terbuka</div>
+            <div class="label">Perbaikan Terbuka</div>
             <div class="value" id="statMaint">—</div>
             <div class="meta">permintaan aktif</div>
           </div>
@@ -678,7 +729,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
     </div>
 
     <!-- PERBAIKAN -->
-    <div id="panel-perbaikan" class="section-panel">
+    <div id="panel-maintenance" class="section-panel">
       <div class="section">
         <div class="section-title">🔧 Permintaan Perbaikan <span class="count-pill" id="maintCount">0</span></div>
         <div class="card-table scroll-x">
@@ -704,7 +755,7 @@ function showPanel(name, el) {
     rooms:    ['Daftar Kamar','Status hunian semua kamar'],
     tenants:  ['Data Penyewa','Penyewa aktif saat ini'],
     payments: ['Pembayaran','Tagihan dan riwayat pembayaran'],
-    maintenance: ['Maintenance','Permintaan perbaikan & perawatan'],
+    maintenance: ['Perbaikan','Permintaan perbaikan & perawatan'],
   };
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSubtitle').textContent = titles[name][1];
@@ -785,6 +836,7 @@ window.addEventListener('firebase-ready', async () => {
           }).join('') || emptyRow(5,'Belum ada kamar');
 
           return `<div class="prop-card">
+            <div class="cat-peek-card">😼</div>
             <div class="prop-card-header">
               <div>
                 <div class="prop-name">🏠 ${prop.name}</div>
@@ -861,7 +913,7 @@ window.addEventListener('firebase-ready', async () => {
     // MAINTENANCE PANEL
     document.getElementById('maintCount').textContent = maints.length;
     document.getElementById('maintBody').innerHTML = maints.length===0
-      ? emptyRow(6,'Tidak ada permintaan maintenance')
+      ? emptyRow(6,'Tidak ada permintaan perbaikan')
       : maints.map(m=>{
           const t = tenantMap[m.tenantId];
           const name = t?t.name:m.tenantId||'—';
