@@ -111,7 +111,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 .data-table td{padding:13px 20px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
 .data-table tr:last-child td{border-bottom:none;}
 .data-table tr:hover td{background:rgba(255,255,255,.03);}
-.room-num{font-family:'DM Mono',monospace;font-weight:500;font-size:13px;}
+.room-num{font-family:'DM Mono',monospace;font-weight:600;font-size:13px;background:rgba(90,171,255,.1);color:var(--accent);padding:2px 8px;border-radius:6px;border:1px solid rgba(90,171,255,.2);display:inline-block;}
 .price-text{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--green);}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;font-family:'DM Mono',monospace;}
 .pill.Terisi{background:var(--accent-bg);color:var(--accent);}
@@ -169,6 +169,13 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 .actions-cell{display:flex;gap:6px;}
 .section-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .section-toolbar .section-title{margin-bottom:0;}
+
+/* ── ROOM NUMBER INPUT ── */
+.room-code-input{display:flex;gap:8px;align-items:center;}
+.room-code-input select{width:90px;flex-shrink:0;}
+.room-code-input .sep{color:var(--muted);font-weight:700;font-size:16px;font-family:'DM Mono',monospace;}
+.room-code-input input{flex:1;}
+.room-preview{margin-top:8px;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);background:var(--accent-bg);border:1px solid rgba(90,171,255,.2);border-radius:8px;padding:6px 12px;display:inline-block;}
 
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -251,11 +258,12 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       <div class="form-row">
         <div class="form-group">
           <label>Properti *</label>
-          <select id="fProperty" onchange="updateRoomDropdown('fProperty','fRoom')">
+          <select id="fProperty" onchange="onTenantPropChange()">
             <option value="">— Pilih Properti —</option>
           </select>
         </div>
-        <div class="form-group"><label>No. Kamar *</label>
+        <div class="form-group">
+          <label>No. Kamar *</label>
           <select id="fRoom">
             <option value="">— Pilih Kamar —</option>
           </select>
@@ -280,18 +288,26 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
     <div class="modal-body">
       <input type="hidden" id="editRoomId"/>
       <input type="hidden" id="editRoomPropId"/>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Properti *</label>
-          <select id="rProperty" onchange="updateRoomDropdown('rProperty','rNumber')">
-            <option value="">— Pilih Properti —</option>
+      <div class="form-group">
+        <label>Properti *</label>
+        <select id="rProperty">
+          <option value="">— Pilih Properti —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>No. Kamar * <span style="font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;">(Gedung - Nomor, cth: A-01)</span></label>
+        <div class="room-code-input">
+          <select id="rGedung" onchange="updateRoomPreview()">
+            <option value="A">Gedung A</option>
+            <option value="B">Gedung B</option>
+            <option value="C">Gedung C</option>
+            <option value="D">Gedung D</option>
+            <option value="E">Gedung E</option>
           </select>
+          <span class="sep">—</span>
+          <input type="number" id="rNomor" placeholder="01" min="1" max="99" oninput="updateRoomPreview()" style="width:80px;flex:none;"/>
         </div>
-        <div class="form-group"><label>No. Kamar *</label>
-          <select id="rNumber">
-            <option value="">— Pilih —</option>
-          </select>
-        </div>
+        <div id="roomPreview" class="room-preview" style="display:none;margin-top:8px;">A-01</div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Tipe</label>
@@ -342,7 +358,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       <div class="form-group"><label>Alamat *</label><input type="text" id="pAddress" placeholder="cth. Jl. Gatot Subroto No.12, Jombang"/></div>
       <div class="form-group"><label>Fasilitas (pisahkan dengan koma)</label><input type="text" id="pFacilities" placeholder="cth. WiFi, AC, Parkir Motor"/></div>
       <div class="form-row">
-        <div class="form-group"><label>Jumlah Kamar</label><input type="number" id="pRoomCount" placeholder="cth. 10" min="1" max="50"/></div>
+        <div class="form-group"><label>Jumlah Kamar</label><input type="number" id="pRoomCount" placeholder="cth. 10" min="1" max="99"/></div>
         <div class="form-group"><label>No. Telepon Pemilik</label><input type="text" id="pPhone" placeholder="cth. 08123456789"/></div>
       </div>
     </div>
@@ -522,9 +538,7 @@ function fmtDate(ts){
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     if(isNaN(d.getTime())) return '—';
     return d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
-  } catch(e) {
-    return '—';
-  }
+  } catch(e) { return '—'; }
 }
 
 function emptyRow(cols, msg){
@@ -547,25 +561,35 @@ function propTypeTag(type){
   return `<span class="prop-type-tag ${type}">${label}</span>`;
 }
 
-// ── ROOM DROPDOWN — populate berdasarkan kamar yang sudah ada di properti ──
-function buildRoomOptions(propId, currentVal){
-  const existing = _allRooms
-    .filter(r => r.propertyId === propId)
-    .map(r => Number(r.roomNumber || r.id.replace('room','')))
-    .filter(n => !isNaN(n));
-  const maxRoom = Math.max(20, ...existing, 0);
-  let opts = '<option value="">— Pilih Kamar —</option>';
-  for(let i = 1; i <= maxRoom + 4; i++){
-    opts += `<option value="${i}"${String(i)===String(currentVal)?' selected':''}>Kamar ${i}</option>`;
-  }
-  return opts;
+// ════════════════════
+//  ROOM NUMBER FORMAT
+//  Format: A-01, B-02, dst
+// ════════════════════
+function buildRoomCode(gedung, nomor){
+  if(!gedung || !nomor) return '';
+  const n = String(nomor).padStart(2, '0');
+  return `${gedung}-${n}`;
 }
 
-function updateRoomDropdown(propSelectId, roomSelectId){
-  const propId = document.getElementById(propSelectId).value;
-  const roomSel = document.getElementById(roomSelectId);
-  if(!propId){ roomSel.innerHTML = '<option value="">— Pilih Kamar —</option>'; return; }
-  roomSel.innerHTML = buildRoomOptions(propId, '');
+function parseRoomCode(code){
+  // parse "A-01" → {gedung:'A', nomor:'01'}
+  if(!code) return {gedung:'A', nomor:''};
+  const match = code.match(/^([A-Za-z]+)-(\d+)$/);
+  if(match) return { gedung: match[1].toUpperCase(), nomor: String(parseInt(match[2])) };
+  return { gedung:'A', nomor: code };
+}
+
+function updateRoomPreview(){
+  const gedung = document.getElementById('rGedung').value;
+  const nomor  = document.getElementById('rNomor').value;
+  const preview = document.getElementById('roomPreview');
+  if(gedung && nomor){
+    const code = buildRoomCode(gedung, nomor);
+    preview.textContent = '🚪 ' + code;
+    preview.style.display = 'inline-block';
+  } else {
+    preview.style.display = 'none';
+  }
 }
 
 // ── FILL PROPERTY DROPDOWNS ──
@@ -577,9 +601,27 @@ function fillPropSelects(){
     }).join('');
   document.getElementById('fProperty').innerHTML = opts;
   document.getElementById('rProperty').innerHTML = opts;
-  // reset room dropdowns
   document.getElementById('fRoom').innerHTML = '<option value="">— Pilih Kamar —</option>';
-  document.getElementById('rNumber').innerHTML = '<option value="">— Pilih —</option>';
+}
+
+// ── TENANT MODAL — room dropdown dari kamar yang ada di properti ──
+function onTenantPropChange(){
+  const propId = document.getElementById('fProperty').value;
+  const roomSel = document.getElementById('fRoom');
+  if(!propId){ roomSel.innerHTML = '<option value="">— Pilih Kamar —</option>'; return; }
+  const propRooms = _allRooms.filter(r => r.propertyId === propId);
+  if(propRooms.length === 0){
+    roomSel.innerHTML = '<option value="">— Belum ada kamar —</option>';
+    return;
+  }
+  // sort kamar by roomNumber
+  const sorted = [...propRooms].sort((a,b) => (a.roomNumber||'').localeCompare(b.roomNumber||''));
+  roomSel.innerHTML = '<option value="">— Pilih Kamar —</option>' +
+    sorted.map(r => {
+      const num = r.roomNumber || r.id;
+      const statusInfo = r.status === 'Terisi' ? ' (Terisi)' : '';
+      return `<option value="${num}"${r.status==='Terisi'?' disabled':''}>${num}${statusInfo}</option>`;
+    }).join('');
 }
 
 // ════════════════════
@@ -627,12 +669,9 @@ async function saveProp(){
   const facStr = document.getElementById('pFacilities').value.trim();
   const phone = document.getElementById('pPhone').value.trim();
   const roomCount = document.getElementById('pRoomCount').value;
-
   if(!name || !address){ showToast('Nama dan alamat wajib diisi','error'); return; }
-
   const facilities = facStr ? facStr.split(',').map(s=>s.trim()).filter(Boolean) : [];
   const data = { name, type, address, facilities, phone, roomCount: Number(roomCount)||0, ownerId:'owner1' };
-
   try {
     if(id){
       await _updateDoc(_docFn(_db,'properties',id), data);
@@ -666,14 +705,13 @@ function openEditTenantModal(id){
   document.getElementById('fPhone').value = t.phone||'';
   document.getElementById('fKtp').value = t.ktpNumber||'';
   document.getElementById('fProperty').value = t.propertyId||'';
-
-  // populate room dropdown for this property
   if(t.propertyId){
-    const roomNum = (t.roomId||'').replace('room','');
-    document.getElementById('fRoom').innerHTML = buildRoomOptions(t.propertyId, roomNum);
-    document.getElementById('fRoom').value = roomNum;
+    onTenantPropChange();
+    // set value setelah dropdown terisi
+    setTimeout(() => {
+      document.getElementById('fRoom').value = t.roomNumber || (t.roomId||'').replace('room','');
+    }, 0);
   }
-
   if(t.startDate){
     try {
       const sd = t.startDate.toDate ? t.startDate.toDate().toISOString().slice(0,10) : t.startDate;
@@ -691,14 +729,12 @@ async function saveTenant(){
   const phone = document.getElementById('fPhone').value.trim();
   const ktp = document.getElementById('fKtp').value.trim();
   const propId = document.getElementById('fProperty').value;
-  const roomNum = document.getElementById('fRoom').value;
+  const roomNumber = document.getElementById('fRoom').value;
   const start = document.getElementById('fStart').value;
-
-  if(!name || !phone || !propId || !roomNum || !start){
+  if(!name || !phone || !propId || !roomNumber || !start){
     showToast('Lengkapi semua field wajib (*)','error'); return;
   }
-
-  const data = { name, phone, ktpNumber:ktp, propertyId:propId, roomId:`room${roomNum}`, startDate:start, status:'active' };
+  const data = { name, phone, ktpNumber:ktp, propertyId:propId, roomNumber, roomId:`room_${roomNumber}`, startDate:start, status:'active' };
   try {
     if(id){
       await _updateDoc(_docFn(_db,'tenants',id), data);
@@ -719,7 +755,9 @@ function openAddRoomModal(){
   document.getElementById('roomModalTitle').textContent = '➕ Tambah Kamar';
   ['editRoomId','editRoomPropId','rTenantId','rPrice'].forEach(id => document.getElementById(id).value='');
   document.getElementById('rProperty').value = '';
-  document.getElementById('rNumber').innerHTML = '<option value="">— Pilih —</option>';
+  document.getElementById('rGedung').value = 'A';
+  document.getElementById('rNomor').value = '';
+  document.getElementById('roomPreview').style.display = 'none';
   document.getElementById('rType').value = 'Standard';
   document.getElementById('rStatus').value = 'Kosong';
   document.getElementById('roomModal').classList.add('open');
@@ -733,9 +771,11 @@ function openEditRoomModal(roomId, propId){
   document.getElementById('editRoomPropId').value = propId;
   document.getElementById('rProperty').value = propId;
 
-  const roomNum = r.roomNumber || roomId.replace('room','');
-  document.getElementById('rNumber').innerHTML = buildRoomOptions(propId, roomNum);
-  document.getElementById('rNumber').value = roomNum;
+  // parse roomNumber misal "A-01" → gedung=A, nomor=1
+  const parsed = parseRoomCode(r.roomNumber || '');
+  document.getElementById('rGedung').value = parsed.gedung;
+  document.getElementById('rNomor').value  = parsed.nomor;
+  updateRoomPreview();
 
   document.getElementById('rType').value = r.type||'Standard';
   document.getElementById('rPrice').value = r.price||'';
@@ -750,26 +790,27 @@ async function saveRoom(){
   const editId = document.getElementById('editRoomId').value;
   const editPropId = document.getElementById('editRoomPropId').value;
   const propId = document.getElementById('rProperty').value;
-  const roomNum = document.getElementById('rNumber').value;
-  const type = document.getElementById('rType').value;
-  const price = document.getElementById('rPrice').value;
+  const gedung = document.getElementById('rGedung').value;
+  const nomor  = document.getElementById('rNomor').value;
+  const type   = document.getElementById('rType').value;
+  const price  = document.getElementById('rPrice').value;
   const status = document.getElementById('rStatus').value;
   const tenantId = document.getElementById('rTenantId').value.trim();
 
-  if(!propId || !roomNum || !price){
-    showToast('Lengkapi Properti, No. Kamar, dan Harga','error'); return;
+  if(!propId || !gedung || !nomor || !price){
+    showToast('Lengkapi semua field wajib','error'); return;
   }
 
-  const data = { roomNumber: roomNum, type, price: Number(price), status, currentTenantId: tenantId };
+  const roomNumber = buildRoomCode(gedung, nomor);
+  const data = { roomNumber, type, price: Number(price), status, currentTenantId: tenantId };
 
   try {
     if(editId && editPropId){
-      // FIX: gunakan argumen individual, bukan spread dari array split
       await _updateDoc(_docFn(_db, 'properties', editPropId, 'rooms', editId), data);
-      showToast('Kamar berhasil diperbarui');
+      showToast(`Kamar ${roomNumber} berhasil diperbarui`);
     } else {
       await _addDoc(_col(_db, 'properties', propId, 'rooms'), data);
-      showToast('Kamar berhasil ditambahkan');
+      showToast(`Kamar ${roomNumber} berhasil ditambahkan`);
     }
     closeRoomModal();
     await reloadData();
@@ -818,7 +859,6 @@ async function runDelete(){
       await _deleteDoc(_docFn(_db,'properties',_pendingDelete.propId,'rooms',_pendingDelete.id));
       showToast('Kamar berhasil dihapus');
     } else if(_pendingDelete.type==='property'){
-      // hapus semua kamar dulu, baru properti
       const propRooms = _allRooms.filter(r => r.propertyId===_pendingDelete.id);
       await Promise.all(propRooms.map(r =>
         _deleteDoc(_docFn(_db,'properties',_pendingDelete.id,'rooms',r.id))
@@ -835,10 +875,16 @@ async function runDelete(){
 //  RENDER
 // ════════════════════
 function renderRooms(tenantMap){
-  document.getElementById('roomCount').textContent = _allRooms.length;
-  document.getElementById('roomsBody').innerHTML = _allRooms.length===0
+  // sort by propertyName then roomNumber
+  const sorted = [..._allRooms].sort((a,b) => {
+    const p = (a.propertyName||'').localeCompare(b.propertyName||'');
+    if(p !== 0) return p;
+    return (a.roomNumber||'').localeCompare(b.roomNumber||'');
+  });
+  document.getElementById('roomCount').textContent = sorted.length;
+  document.getElementById('roomsBody').innerHTML = sorted.length===0
     ? emptyRow(7,'Belum ada kamar')
-    : _allRooms.map(r => {
+    : sorted.map(r => {
         const t = r.currentTenantId ? tenantMap[r.currentTenantId] : null;
         return `<tr>
           <td><span class="room-num">${r.roomNumber||r.id}</span></td>
@@ -861,11 +907,12 @@ function renderTenants(){
     ? emptyRow(7,'Belum ada penyewa')
     : _tenants.map(t => {
         const prop = _properties.find(p => p.id===t.propertyId);
+        const roomDisplay = t.roomNumber || (t.roomId||'').replace('room_','').replace('room','') || '—';
         return `<tr>
           <td><strong>${t.name}</strong></td>
           <td>${t.phone||'—'}</td>
           <td style="font-family:'DM Mono',monospace;font-size:12px">${t.ktpNumber||'—'}</td>
-          <td><span class="room-num">${t.roomId||'—'}</span></td>
+          <td><span class="room-num">${roomDisplay}</span></td>
           <td>${prop?prop.name:(t.propertyId||'—')}</td>
           <td>${fmtDate(t.startDate)}</td>
           <td><div class="actions-cell">
@@ -904,29 +951,29 @@ async function reloadData(){
   fillPropSelects();
 
   // ── STATS ──
-  const Terisi = _allRooms.filter(r => r.status==='Terisi').length;
+  const terisi = _allRooms.filter(r => r.status==='Terisi').length;
   const unpaidPay = _payments.filter(p => p.status==='unpaid');
   const unpaidAmt = unpaidPay.reduce((s,p) => s + Number(p.amount||0), 0);
   const openMaint = _maints.filter(m => m.status==='open').length;
 
-  document.getElementById('statRooms').textContent    = _allRooms.length;
-  document.getElementById('statTerisi').textContent = Terisi;
-  document.getElementById('statPct').textContent      = `${Math.round(Terisi/(_allRooms.length||1)*100)}% terisi`;
-  document.getElementById('statUnpaid').textContent   = unpaidPay.length;
-  document.getElementById('statAmt').textContent      = fmt(unpaidAmt);
-  document.getElementById('statMaint').textContent    = openMaint;
+  document.getElementById('statRooms').textContent  = _allRooms.length;
+  document.getElementById('statTerisi').textContent = terisi;
+  document.getElementById('statPct').textContent    = `${Math.round(terisi/(_allRooms.length||1)*100)}% terisi`;
+  document.getElementById('statUnpaid').textContent = unpaidPay.length;
+  document.getElementById('statAmt').textContent    = fmt(unpaidAmt);
+  document.getElementById('statMaint').textContent  = openMaint;
 
   // ── PROPERTY CARDS ──
   document.getElementById('propCount').textContent = _properties.length;
   const grid = document.getElementById('propertyGrid');
   grid.innerHTML = _properties.length===0
     ? `<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px;">
-        🐱 Belum ada properti.
-        <br><br>
+        🐱 Belum ada properti.<br><br>
         <button class="btn btn-primary" onclick="openAddPropModal()">➕ Tambah Properti Pertama</button>
       </div>`
     : _properties.map(prop => {
-        const propRooms = _allRooms.filter(r => r.propertyId===prop.id);
+        const propRooms = [..._allRooms.filter(r => r.propertyId===prop.id)]
+          .sort((a,b) => (a.roomNumber||'').localeCompare(b.roomNumber||''));
         const occ = propRooms.filter(r => r.status==='Terisi').length;
         const pct = propRooms.length ? Math.round(occ/propRooms.length*100) : 0;
         const bc = pct===100?'full':pct>0?'partial':'empty';
@@ -942,7 +989,7 @@ async function reloadData(){
             <td><span class="pill ${r.status}">${r.status}</span></td>
             <td>${t?t.name:'—'}</td>
           </tr>`;
-        }).join('') || emptyRow(5,'Belum ada kamar');
+        }).join('') || emptyRow(5,'Belum ada kamar — tambah lewat menu Kamar');
 
         return `<div class="prop-card">
           <div class="cat-peek-card">😼</div>
@@ -982,9 +1029,10 @@ async function reloadData(){
     if(!list.length) return emptyRow(5,'Tidak ada data');
     return list.map(p => {
       const t = tenantMap[p.tenantId];
+      const roomDisplay = t ? (t.roomNumber || (t.roomId||'').replace('room_','').replace('room','') || '—') : '—';
       return `<tr>
         <td>${t?t.name:(p.tenantId||'—')}</td>
-        <td><span class="room-num">${t?(t.roomId||'—'):'—'}</span></td>
+        <td><span class="room-num">${roomDisplay}</span></td>
         <td>${p.month||'—'}</td>
         <td class="price-text">${fmt(p.amount||0)}</td>
         <td><span class="pill ${p.status}">${p.status}</span></td>
@@ -994,7 +1042,7 @@ async function reloadData(){
   document.getElementById('unpaidBody').innerHTML = payRows(unpaidPay);
   document.getElementById('paidBody').innerHTML   = payRows(paidPay);
 
-  // ── Perbaikan ──
+  // ── PERBAIKAN ──
   document.getElementById('maintCount').textContent = _maints.length;
   document.getElementById('maintBody').innerHTML = _maints.length===0
     ? emptyRow(6,'Tidak ada permintaan perbaikan')
@@ -1018,7 +1066,6 @@ window.addEventListener('firebase-ready', async () => {
   _col = m.collection; _getDocs = m.getDocs; _addDoc = m.addDoc;
   _updateDoc = m.updateDoc; _deleteDoc = m.deleteDoc; _docFn = m.doc;
   _serverTimestamp = m.serverTimestamp;
-
   try {
     await reloadData();
   } catch(err) {
@@ -1036,3 +1083,5 @@ document.getElementById('confirmBox').addEventListener('click',  function(e){ if
 </script>
 </body>
 </html>
+HTMLEOF
+echo "done"
