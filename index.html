@@ -1,206 +1,826 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Koskita — Dashboard Pemilik</title>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, getDocs, query, where, doc, getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    <title>KosKita Dashboard</title>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBJgzx2t4kSdqcrId0MB1YYx9YjEi7iL_U",
+    authDomain: "koskita-app-f69ad.firebaseapp.com",
+    projectId: "koskita-app-f69ad",
+    storageBucket: "koskita-app-f69ad.firebasestorage.app",
+    messagingSenderId: "502984689733",
+    appId: "1:502984689733:web:74f6db34e626cd989efb2c"
+  };
 
-    <link rel="stylesheet" href="style.css">
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+  window.__db = db;
+  window.__fbModules = { collection, getDocs, query, where, doc, getDoc };
+  window.dispatchEvent(new Event("firebase-ready"));
+</script>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --surface-2: #F0EEE9;
+    --border: #E4E1DA;
+    --text: #1A1916;
+    --text-muted: #7A7770;
+    --accent: #2D6A4F;
+    --accent-light: #D8EDDF;
+    --warn: #C85A1A;
+    --warn-light: #FDEEE5;
+    --gold: #B8860B;
+    --gold-light: #FBF3DC;
+    --blue: #1C4F82;
+    --blue-light: #DDEAF8;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+
+  aside {
+    width: 240px;
+    background: var(--text);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+
+  .sidebar-brand .logo {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -.5px;
+    color: #fff;
+  }
+
+  .sidebar-brand .logo span { color: #7EE8A2; }
+  .sidebar-brand .owner-label { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 4px; }
+
+  nav { flex: 1; padding: 16px 12px; }
+
+  nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: rgba(255,255,255,.65);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    margin-bottom: 2px;
+  }
+
+  nav a:hover, nav a.active {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+  }
+
+  nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,.1);
+    font-size: 12px;
+    color: rgba(255,255,255,.35);
+  }
+
+  /* MAIN */
+  main {
+    flex: 1;
+    padding: 32px;
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title { font-size: 24px; font-weight: 700; letter-spacing: -.5px; }
+  .page-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+  .badge-live {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 99px;
+  }
+
+  .badge-live::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  /* STAT CARDS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-card .label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .6px; }
+
+  .stat-card .value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin: 8px 0 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .stat-card .meta { font-size: 12px; color: var(--text-muted); }
+  .stat-card.green .value { color: var(--accent); }
+  .stat-card.warn .value { color: var(--warn); }
+  .stat-card.gold .value { color: var(--gold); }
+  .stat-card.blue .value { color: var(--blue); }
+
+  /* SECTION */
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title .count-pill {
+    font-size: 11px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+
+  /* PROPERTY CARD */
+  .property-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .prop-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .prop-card-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .prop-name { font-size: 16px; font-weight: 700; }
+  .prop-address { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .prop-facilities {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .facility-tag {
+    font-size: 11px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-weight: 500;
+  }
+
+  .occupancy-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .occupancy-badge.full { background: var(--accent-light); color: var(--accent); }
+  .occupancy-badge.partial { background: var(--gold-light); color: var(--gold); }
+  .occupancy-badge.empty { background: var(--warn-light); color: var(--warn); }
+
+  /* ROOMS TABLE */
+  .rooms-table { width: 100%; border-collapse: collapse; }
+
+  .rooms-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 20px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rooms-table td {
+    padding: 12px 20px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .rooms-table tr:last-child td { border-bottom: none; }
+  .rooms-table tr:hover td { background: var(--bg); }
+
+  .room-num {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .status-pill.occupied { background: var(--accent-light); color: var(--accent); }
+  .status-pill.vacant { background: var(--surface-2); color: var(--text-muted); }
+  .status-pill.maintenance { background: var(--warn-light); color: var(--warn); }
+
+  .price-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* PAYMENTS TABLE */
+  .card-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .data-table { width: 100%; border-collapse: collapse; }
+
+  .data-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 20px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 13px 20px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg); }
+
+  .pay-status.unpaid { background: var(--warn-light); color: var(--warn); }
+  .pay-status.paid { background: var(--accent-light); color: var(--accent); }
+  .pay-status {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .maint-priority.low { background: var(--blue-light); color: var(--blue); }
+  .maint-priority.medium { background: var(--gold-light); color: var(--gold); }
+  .maint-priority.high { background: var(--warn-light); color: var(--warn); }
+  .maint-priority {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .maint-status.open { background: var(--warn-light); color: var(--warn); }
+  .maint-status.resolved { background: var(--accent-light); color: var(--accent); }
+  .maint-status {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* TWO COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* LOADING */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+    height: 14px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  .loading-row td { padding: 16px 20px; }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* SCROLLABLE */
+  .scroll-x { overflow-x: auto; }
+
+  /* SECTION TABS */
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    aside { display: none; }
+    main { padding: 20px 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  }
+</style>
 </head>
-
 <body>
 
-    <!-- Sidebar -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-brand">
+      <div class="logo">Kos<span>kita</span></div>
+      <div class="owner-label">Dashboard Pemilik</div>
+    </div>
+    <nav>
+      <a class="active" onclick="showPanel('overview')">
+        <span class="icon">🏠</span> Ringkasan
+      </a>
+      <a onclick="showPanel('rooms')">
+        <span class="icon">🚪</span> Kamar
+      </a>
+      <a onclick="showPanel('tenants')">
+        <span class="icon">👤</span> Penyewa
+      </a>
+      <a onclick="showPanel('payments')">
+        <span class="icon">💳</span> Pembayaran
+      </a>
+      <a onclick="showPanel('maintenance')">
+        <span class="icon">🔧</span> Maintenance
+      </a>
+    </nav>
+    <div class="sidebar-footer">koskita-app · owner1</div>
+  </aside>
 
-    <aside class="sidebar">
+  <!-- MAIN -->
+  <main>
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="pageTitle">Ringkasan Properti</div>
+        <div class="page-subtitle" id="pageSubtitle">Martha · Kos Putri, Jl. Gatot Subroto No.12 Jombang</div>
+      </div>
+      <div class="badge-live">Live Data</div>
+    </div>
 
-        <div class="logo">
-            <i class="fa-solid fa-house"></i>
-            <span>KosKita</span>
+    <!-- OVERVIEW PANEL -->
+    <div id="panel-overview" class="section-panel active">
+      <!-- STATS -->
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card blue">
+          <div class="label">Total Kamar</div>
+          <div class="value" id="statRooms">—</div>
+          <div class="meta">di semua properti</div>
         </div>
-
-        <ul>
-
-            <li class="active">
-                <i class="fa-solid fa-chart-line"></i>
-                Dashboard
-            </li>
-
-            <li>
-                <i class="fa-solid fa-building"></i>
-                Properti
-            </li>
-
-            <li>
-                <i class="fa-solid fa-bed"></i>
-                Kamar
-            </li>
-
-            <li>
-                <i class="fa-solid fa-users"></i>
-                Penyewa
-            </li>
-
-            <li>
-                <i class="fa-solid fa-money-bill-wave"></i>
-                Pembayaran
-            </li>
-
-        </ul>
-
-    </aside>
-
-    <!-- Main -->
-
-    <main>
-
-        <header>
-
-            <div>
-
-                <h1>Dashboard Pemilik Kos</h1>
-                <p>Monitoring Properti KosKita</p>
-
-            </div>
-
-            <div class="profile">
-
-                <i class="fa-solid fa-user"></i>
-
-                <span>Pemilik</span>
-
-            </div>
-
-        </header>
-
-        <!-- Statistik -->
-
-        <section class="cards">
-
-            <div class="card blue">
-
-                <i class="fa-solid fa-building"></i>
-
-                <div>
-
-                    <h2 id="totalProperty">0</h2>
-
-                    <p>Total Properti</p>
-
-                </div>
-
-            </div>
-
-            <div class="card green">
-
-                <i class="fa-solid fa-bed"></i>
-
-                <div>
-
-                    <h2 id="totalRoom">0</h2>
-
-                    <p>Total Kamar</p>
-
-                </div>
-
-            </div>
-
-            <div class="card orange">
-
-                <i class="fa-solid fa-user-check"></i>
-
-                <div>
-
-                    <h2 id="occupiedRoom">0</h2>
-
-                    <p>Kamar Terisi</p>
-
-                </div>
-
-            </div>
-
-            <div class="card red">
-
-                <i class="fa-solid fa-file-invoice-dollar"></i>
-
-                <div>
-
-                    <h2 id="totalUnpaid">0</h2>
-
-                    <p>Tagihan Tertunggak</p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-        <!-- Properti -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <h2>Daftar Properti & Kamar</h2>
-
-            </div>
-
-            <div id="propertyContainer">
-
-            </div>
-
-        </section>
-
-        <!-- Tagihan -->
-
-        <section class="panel">
-
-            <div class="panel-header">
-
-                <h2>Tagihan Belum Dibayar</h2>
-
-            </div>
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>Tenant</th>
-                        <th>Properti</th>
-                        <th>Bulan</th>
-                        <th>Jumlah</th>
-                        <th>Status</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="paymentBody">
-
-                </tbody>
-
+        <div class="stat-card green">
+          <div class="label">Terisi</div>
+          <div class="value" id="statOccupied">—</div>
+          <div class="meta" id="statOccupiedPct">dari total kamar</div>
+        </div>
+        <div class="stat-card warn">
+          <div class="label">Tagihan Tertunggak</div>
+          <div class="value" id="statUnpaid">—</div>
+          <div class="meta" id="statUnpaidAmt">total nominal</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="label">Maintenance Terbuka</div>
+          <div class="value" id="statMaint">—</div>
+          <div class="meta">permintaan aktif</div>
+        </div>
+      </div>
+
+      <!-- PROPERTIES -->
+      <div class="section">
+        <div class="section-title">
+          Properti <span class="count-pill" id="propCount">0</span>
+        </div>
+        <div class="property-grid" id="propertyGrid">
+          <div class="prop-card" style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">
+            Memuat data properti...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOMS PANEL -->
+    <div id="panel-rooms" class="section-panel">
+      <div class="section">
+        <div class="section-title">Daftar Kamar <span class="count-pill" id="roomCount">0</span></div>
+        <div class="card-table scroll-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No. Kamar</th>
+                <th>Properti</th>
+                <th>Tipe</th>
+                <th>Harga/Bulan</th>
+                <th>Status</th>
+                <th>Penyewa</th>
+              </tr>
+            </thead>
+            <tbody id="roomsBody">
+              <tr class="loading-row"><td colspan="6"><div class="skeleton"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TENANTS PANEL -->
+    <div id="panel-tenants" class="section-panel">
+      <div class="section">
+        <div class="section-title">Penyewa Aktif <span class="count-pill" id="tenantCount">0</span></div>
+        <div class="card-table scroll-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>No. Telepon</th>
+                <th>No. KTP</th>
+                <th>Kamar</th>
+                <th>Properti</th>
+                <th>Mulai Sewa</th>
+              </tr>
+            </thead>
+            <tbody id="tenantsBody">
+              <tr class="loading-row"><td colspan="6"><div class="skeleton"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS PANEL -->
+    <div id="panel-payments" class="section-panel">
+      <div class="two-col">
+        <div class="section">
+          <div class="section-title" style="color:var(--warn);">🔴 Tagihan Tertunggak <span class="count-pill" id="unpaidCount">0</span></div>
+          <div class="card-table scroll-x">
+            <table class="data-table">
+              <thead>
+                <tr><th>Penyewa</th><th>Kamar</th><th>Bulan</th><th>Jumlah</th><th>Status</th></tr>
+              </thead>
+              <tbody id="unpaidBody">
+                <tr class="loading-row"><td colspan="5"><div class="skeleton"></div></td></tr>
+              </tbody>
             </table>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title" style="color:var(--accent);">✅ Sudah Dibayar <span class="count-pill" id="paidCount">0</span></div>
+          <div class="card-table scroll-x">
+            <table class="data-table">
+              <thead>
+                <tr><th>Penyewa</th><th>Kamar</th><th>Bulan</th><th>Jumlah</th><th>Status</th></tr>
+              </thead>
+              <tbody id="paidBody">
+                <tr class="loading-row"><td colspan="5"><div class="skeleton"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        </section>
+    <!-- MAINTENANCE PANEL -->
+    <div id="panel-maintenance" class="section-panel">
+      <div class="section">
+        <div class="section-title">Permintaan Maintenance <span class="count-pill" id="maintCount">0</span></div>
+        <div class="card-table scroll-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Deskripsi</th>
+                <th>Kamar</th>
+                <th>Penyewa</th>
+                <th>Prioritas</th>
+                <th>Status</th>
+                <th>Tanggal</th>
+              </tr>
+            </thead>
+            <tbody id="maintBody">
+              <tr class="loading-row"><td colspan="6"><div class="skeleton"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-    </main>
+  </main>
+</div>
 
-    <script type="module" src="app.js"></script>
+<script>
+  // NAV
+  function showPanel(name) {
+    document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    const titles = {
+      overview: ['Ringkasan Properti', 'Martha · Kos Putri, Jl. Gatot Subroto No.12 Jombang'],
+      rooms: ['Daftar Kamar', 'Status hunian semua kamar'],
+      tenants: ['Data Penyewa', 'Penyewa aktif saat ini'],
+      payments: ['Pembayaran', 'Tagihan dan riwayat pembayaran'],
+      maintenance: ['Maintenance', 'Permintaan perbaikan & perawatan'],
+    };
+    document.getElementById('pageTitle').textContent = titles[name][0];
+    document.getElementById('pageSubtitle').textContent = titles[name][1];
+  }
 
+  function fmt(n) {
+    return 'Rp ' + Number(n).toLocaleString('id-ID');
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    try {
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch { return '—'; }
+  }
+
+  function emptyRow(cols, msg) {
+    return `<tr><td colspan="${cols}" class="empty-state">${msg}</td></tr>`;
+  }
+
+  window.addEventListener('firebase-ready', async () => {
+    const db = window.__db;
+    const { collection, getDocs, query, where } = window.__fbModules;
+
+    try {
+      // Fetch all collections
+      const [propSnap, tenantSnap, paySnap, maintSnap] = await Promise.all([
+        getDocs(collection(db, 'properties')),
+        getDocs(collection(db, 'tenants')),
+        getDocs(collection(db, 'payments')),
+        getDocs(collection(db, 'maintenanceRequests')),
+      ]);
+
+      const properties = propSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const tenants = tenantSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const payments = paySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const maints = maintSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Fetch rooms subcollections
+      const allRooms = [];
+      for (const prop of properties) {
+        const roomSnap = await getDocs(collection(db, 'properties', prop.id, 'rooms'));
+        roomSnap.docs.forEach(r => allRooms.push({ id: r.id, propertyId: prop.id, propertyName: prop.name, ...r.data() }));
+      }
+
+      // Index tenants by id
+      const tenantMap = {};
+      tenants.forEach(t => tenantMap[t.id] = t);
+
+      // STATS
+      const occupied = allRooms.filter(r => r.status === 'occupied').length;
+      const unpaidPay = payments.filter(p => p.status === 'unpaid');
+      const unpaidAmt = unpaidPay.reduce((s, p) => s + Number(p.amount || 0), 0);
+      const openMaint = maints.filter(m => m.status === 'open').length;
+
+      document.getElementById('statRooms').textContent = allRooms.length;
+      document.getElementById('statOccupied').textContent = occupied;
+      document.getElementById('statOccupiedPct').textContent = `${Math.round(occupied / allRooms.length * 100) || 0}% terisi`;
+      document.getElementById('statUnpaid').textContent = unpaidPay.length;
+      document.getElementById('statUnpaidAmt').textContent = fmt(unpaidAmt);
+      document.getElementById('statMaint').textContent = openMaint;
+
+      // PROPERTY CARDS
+      document.getElementById('propCount').textContent = properties.length;
+      const grid = document.getElementById('propertyGrid');
+      if (properties.length === 0) {
+        grid.innerHTML = emptyRow(1, 'Belum ada properti');
+      } else {
+        grid.innerHTML = properties.map(prop => {
+          const propRooms = allRooms.filter(r => r.propertyId === prop.id);
+          const occ = propRooms.filter(r => r.status === 'occupied').length;
+          const pct = propRooms.length ? Math.round(occ / propRooms.length * 100) : 0;
+          const badgeClass = pct === 100 ? 'full' : pct > 0 ? 'partial' : 'empty';
+          const facilities = (prop.facilities || []).map(f => `<span class="facility-tag">${f}</span>`).join('');
+
+          const roomRows = propRooms.map(r => {
+            const tenant = r.currentTenantId ? tenantMap[r.currentTenantId] : null;
+            const tenantName = tenant ? tenant.name : '—';
+            return `<tr>
+              <td><span class="room-num">${r.roomNumber || r.id}</span></td>
+              <td>${r.type || '—'}</td>
+              <td class="price-text">${fmt(r.price || 0)}</td>
+              <td><span class="status-pill ${r.status}">${r.status}</span></td>
+              <td>${tenantName}</td>
+            </tr>`;
+          }).join('') || `<tr><td colspan="5" class="empty-state">Belum ada kamar</td></tr>`;
+
+          return `<div class="prop-card">
+            <div class="prop-card-header">
+              <div>
+                <div class="prop-name">${prop.name}</div>
+                <div class="prop-address">${prop.address || ''}</div>
+                <div class="prop-facilities" style="margin-top:8px">${facilities}</div>
+              </div>
+              <div>
+                <div class="occupancy-badge ${badgeClass}">${occ}/${propRooms.length}</div>
+              </div>
+            </div>
+            <div class="scroll-x">
+              <table class="rooms-table">
+                <thead>
+                  <tr>
+                    <th>No. Kamar</th><th>Tipe</th><th>Harga</th><th>Status</th><th>Penyewa</th>
+                  </tr>
+                </thead>
+                <tbody>${roomRows}</tbody>
+              </table>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      // ROOMS PANEL
+      document.getElementById('roomCount').textContent = allRooms.length;
+      const roomsBody = document.getElementById('roomsBody');
+      roomsBody.innerHTML = allRooms.length === 0
+        ? emptyRow(6, 'Belum ada kamar')
+        : allRooms.map(r => {
+          const tenant = r.currentTenantId ? tenantMap[r.currentTenantId] : null;
+          return `<tr>
+            <td><span class="room-num">${r.roomNumber || r.id}</span></td>
+            <td>${r.propertyName || r.propertyId}</td>
+            <td>${r.type || '—'}</td>
+            <td class="price-text">${fmt(r.price || 0)}</td>
+            <td><span class="status-pill ${r.status}">${r.status}</span></td>
+            <td>${tenant ? tenant.name : '—'}</td>
+          </tr>`;
+        }).join('');
+
+      // TENANTS PANEL
+      document.getElementById('tenantCount').textContent = tenants.length;
+      const tenantsBody = document.getElementById('tenantsBody');
+      tenantsBody.innerHTML = tenants.length === 0
+        ? emptyRow(6, 'Belum ada penyewa')
+        : tenants.map(t => {
+          const prop = properties.find(p => p.id === t.propertyId);
+          return `<tr>
+            <td><strong>${t.name}</strong></td>
+            <td>${t.phone || '—'}</td>
+            <td style="font-family:'DM Mono',monospace;font-size:12px">${t.ktpNumber || '—'}</td>
+            <td><span class="room-num">${t.roomId || '—'}</span></td>
+            <td>${prop ? prop.name : t.propertyId || '—'}</td>
+            <td>${fmtDate(t.startDate)}</td>
+          </tr>`;
+        }).join('');
+
+      // PAYMENTS PANEL
+      const paidPay = payments.filter(p => p.status === 'paid');
+      document.getElementById('unpaidCount').textContent = unpaidPay.length;
+      document.getElementById('paidCount').textContent = paidPay.length;
+
+      function payRows(list) {
+        if (!list.length) return emptyRow(5, 'Tidak ada data');
+        return list.map(p => {
+          const tenant = tenantMap[p.tenantId];
+          const tenantName = tenant ? tenant.name : p.tenantId || '—';
+          const roomId = tenant ? (tenant.roomId || '—') : '—';
+          return `<tr>
+            <td>${tenantName}</td>
+            <td><span class="room-num">${roomId}</span></td>
+            <td>${p.month || '—'}</td>
+            <td class="price-text">${fmt(p.amount || 0)}</td>
+            <td><span class="pay-status ${p.status}">${p.status}</span></td>
+          </tr>`;
+        }).join('');
+      }
+
+      document.getElementById('unpaidBody').innerHTML = payRows(unpaidPay);
+      document.getElementById('paidBody').innerHTML = payRows(paidPay);
+
+      // MAINTENANCE PANEL
+      document.getElementById('maintCount').textContent = maints.length;
+      const maintBody = document.getElementById('maintBody');
+      maintBody.innerHTML = maints.length === 0
+        ? emptyRow(6, 'Tidak ada permintaan maintenance')
+        : maints.map(m => {
+          const tenant = tenantMap[m.tenantId];
+          const tenantName = tenant ? tenant.name : m.tenantId || '—';
+          return `<tr>
+            <td>${m.description || '—'}</td>
+            <td><span class="room-num">${m.roomId || '—'}</span></td>
+            <td>${tenantName}</td>
+            <td><span class="maint-priority ${m.priority}">${m.priority || '—'}</span></td>
+            <td><span class="maint-status ${m.status}">${m.status || '—'}</span></td>
+            <td>${fmtDate(m.createdAt)}</td>
+          </tr>`;
+        }).join('');
+
+    } catch (err) {
+      console.error('Firebase error:', err);
+      document.getElementById('propertyGrid').innerHTML =
+        `<div style="padding:32px;color:var(--warn);font-size:13px;">
+          Gagal memuat data: ${err.message}
+        </div>`;
+    }
+  });
+</script>
 </body>
-
 </html>
