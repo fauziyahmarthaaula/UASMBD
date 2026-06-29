@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard Pemilik KosKita</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+background:#eef3ff;
+padding:30px;
+}
+
+h1{
+text-align:center;
+color:#1e3a8a;
+margin-bottom:30px;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.1);
+margin-bottom:25px;
+}
+
+.card h2{
+color:#2563eb;
+margin-bottom:10px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th{
+background:#2563eb;
+color:white;
+padding:10px;
+}
+
+td{
+padding:10px;
+border-bottom:1px solid #ddd;
+text-align:center;
+}
+
+.status-occupied{
+color:red;
+font-weight:bold;
+}
+
+.status-available{
+color:green;
+font-weight:bold;
+}
+
+.status-maintenance{
+color:orange;
+font-weight:bold;
+}
+
+.unpaid{
+color:red;
+font-weight:bold;
+}
+
+.paid{
+color:green;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Dashboard Pemilik KosKita</h1>
+
+<div id="properties"></div>
+
+<div class="card">
+
+<h2>Tagihan Belum Dibayar</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Tenant</th>
+<th>Property</th>
+<th>Bulan</th>
+<th>Jumlah</th>
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="paymentTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+
+import {
+
+getFirestore,
+collection,
+onSnapshot,
+query,
+where
+
+} from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyBJgzx2t4kSdqcrId0MB1YYx9YjEi7iL_U",
+
+authDomain: "koskita-app-f69ad.firebaseapp.com",
+
+projectId: "koskita-app-f69ad",
+
+storageBucket: "koskita-app-f69ad.firebasestorage.app",
+
+messagingSenderId: "502984689733",
+
+appId: "1:502984689733:web:74f6db34e626cd989efb2c"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const propertiesDiv = document.getElementById("properties");
+
+const paymentTable = document.getElementById("paymentTable");
+
+
+// ==========================
+// MENAMPILKAN PROPERTI
+// ==========================
+
+onSnapshot(collection(db,"properties"),(snapshot)=>{
+
+propertiesDiv.innerHTML="";
+
+snapshot.forEach((property)=>{
+
+const data=property.data();
+
+const card=document.createElement("div");
+
+card.className="card";
+
+card.innerHTML=`
+
+<h2>${data.name}</h2>
+
+<p><b>Alamat :</b> ${data.address}</p>
+
+<p><b>Fasilitas :</b> ${data.facilities.join(", ")}</p>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>No Kamar</th>
+
+<th>Tipe</th>
+
+<th>Harga</th>
+
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="room-${property.id}">
+
+<tr>
+
+<td colspan="4">Loading...</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+`;
+
+propertiesDiv.appendChild(card);
+
+
+// ==========================
+// SUB COLLECTION ROOMS
+// ==========================
+
+onSnapshot(
+
+collection(db,"properties",property.id,"rooms"),
+
+(roomSnapshot)=>{
+
+let roomHTML="";
+
+roomSnapshot.forEach((room)=>{
+
+const r=room.data();
+
+let warna="";
+
+if(r.status=="occupied") warna="status-occupied";
+
+if(r.status=="available") warna="status-available";
+
+if(r.status=="maintenance") warna="status-maintenance";
+
+roomHTML+=`
+
+<tr>
+
+<td>${r.roomNumber}</td>
+
+<td>${r.type}</td>
+
+<td>Rp ${Number(r.price).toLocaleString("id-ID")}</td>
+
+<td class="${warna}">${r.status}</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("room-"+property.id).innerHTML=roomHTML;
+
+});
+
+});
+
+});
+
+
+
+// ==========================
+// TAGIHAN BELUM DIBAYAR
+// ==========================
+
+const unpaidQuery=query(
+
+collection(db,"payments"),
+
+where("status","==","unpaid")
+
+);
+
+onSnapshot(unpaidQuery,(snapshot)=>{
+
+paymentTable.innerHTML="";
+
+snapshot.forEach((payment)=>{
+
+const p=payment.data();
+
+paymentTable.innerHTML+=`
+
+<tr>
+
+<td>${p.tenantId}</td>
+
+<td>${p.propertyId}</td>
+
+<td>${p.month}</td>
+
+<td>Rp ${Number(p.amount).toLocaleString("id-ID")}</td>
+
+<td class="unpaid">${p.status}</td>
+
+</tr>
+
+`;
+
+});
+
+});
+
+</script>
+
+</body>
+
+</html>
