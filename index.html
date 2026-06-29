@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Koskita — Dashboard Pemilik</title>
+<div class="page-title">
+🏠 Dashboard KosKita 🐾
+</div>
 
 <!-- Firebase -->
 <script type="module">
@@ -35,49 +37,62 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #F7F6F3;
-    --surface: #FFFFFF;
-    --surface-2: #F0EEE9;
-    --border: #E4E1DA;
-    --text: #1A1916;
-    --text-muted: #7A7770;
-    --accent: #2D6A4F;
-    --accent-light: #D8EDDF;
-    --warn: #C85A1A;
-    --warn-light: #FDEEE5;
-    --gold: #B8860B;
-    --gold-light: #FBF3DC;
-    --blue: #1C4F82;
-    --blue-light: #DDEAF8;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
-  }
+  --bg: #071426;
+  --surface: #10233f;
+  --surface-2: #183255;
+  --border: #29476d;
 
-  body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  --text: #ffffff;
+  --text-muted: #a8bdd7;
 
+  --accent: #5fb3ff;
+  --accent-light: rgba(95,179,255,.15);
+
+  --warn: #ffb84d;
+  --warn-light: rgba(255,184,77,.15);
+
+  --gold: #ffd166;
+  --gold-light: rgba(255,209,102,.15);
+
+  --blue: #74c0fc;
+  --blue-light: rgba(116,192,252,.15);
+
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(4,13,25,.45);
+    pointer-events:none;
+}
+ body{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    min-height:100vh;
+    color:var(--text);
+
+    background:
+    url("https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=300&q=80") no-repeat left bottom,
+    url("https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=250&q=80") no-repeat right top,
+    linear-gradient(135deg,#06111f,#0d2340,#163b67);
+
+    background-size:
+    220px,
+    180px,
+    cover;
+
+    background-attachment:fixed;
+}
   /* SIDEBAR */
   .layout { display: flex; min-height: 100vh; }
 
-  aside {
-    width: 240px;
-    background: var(--text);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-  }
-
+ aside{
+    background:rgba(8,22,45,.92);
+    backdrop-filter:blur(10px);
+    border-right:1px solid rgba(255,255,255,.08);
+}
   .sidebar-brand {
     padding: 28px 24px 20px;
     border-bottom: 1px solid rgba(255,255,255,.1);
@@ -185,11 +200,13 @@
     font-family: 'DM Mono', monospace;
   }
 
-  .stat-card .meta { font-size: 12px; color: var(--text-muted); }
-  .stat-card.green .value { color: var(--accent); }
-  .stat-card.warn .value { color: var(--warn); }
-  .stat-card.gold .value { color: var(--gold); }
-  .stat-card.blue .value { color: var(--blue); }
+.stat-card,
+.prop-card,
+.card-table{
+    background:rgba(255,255,255,.06);
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.08);
+}
 
   /* SECTION */
   .section { margin-bottom: 32px; }
