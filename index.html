@@ -177,6 +177,11 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
 .room-code-input input{flex:1;}
 .room-preview{margin-top:8px;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);background:var(--accent-bg);border:1px solid rgba(90,171,255,.2);border-radius:8px;padding:6px 12px;display:inline-block;}
 
+/* ── TENANT SELECT INFO ── */
+.tenant-select-info{margin-top:6px;font-size:11px;color:var(--muted);padding:6px 10px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid var(--border);display:none;}
+.tenant-select-info.show{display:block;}
+.tenant-select-info strong{color:var(--text);}
+
 /* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
@@ -290,7 +295,7 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       <input type="hidden" id="editRoomPropId"/>
       <div class="form-group">
         <label>Properti *</label>
-        <select id="rProperty">
+        <select id="rProperty" onchange="onRoomPropChange()">
           <option value="">— Pilih Properti —</option>
         </select>
       </div>
@@ -321,14 +326,24 @@ main{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0;}
       </div>
       <div class="form-row">
         <div class="form-group"><label>Status *</label>
-          <select id="rStatus">
+          <select id="rStatus" onchange="onRoomStatusChange()">
             <option value="Kosong">Kosong</option>
             <option value="Terisi">Terisi</option>
             <option value="Perbaikan">Perbaikan</option>
           </select>
         </div>
-        <div class="form-group"><label>ID Penyewa (opsional)</label><input type="text" id="rTenantId" placeholder="cth. tenant_badrus"/></div>
+        <!-- ▸▸ PERUBAHAN UTAMA: dropdown penyewa aktif, menggantikan input teks ◂◂ -->
+        <div class="form-group" id="tenantSelectGroup">
+          <label>Penyewa <span style="font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;">(hanya jika Terisi)</span></label>
+          <select id="rTenantSelect" onchange="onRoomTenantSelectChange()">
+            <option value="">— Pilih Penyewa —</option>
+          </select>
+          <!-- info kartu penyewa terpilih -->
+          <div class="tenant-select-info" id="tenantSelectInfo"></div>
+        </div>
       </div>
+      <!-- hidden field tetap ada untuk menyimpan ID -->
+      <input type="hidden" id="rTenantId"/>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" onclick="closeRoomModal()">Batal</button>
@@ -563,7 +578,6 @@ function propTypeTag(type){
 
 // ════════════════════
 //  ROOM NUMBER FORMAT
-//  Format: A-01, B-02, dst
 // ════════════════════
 function buildRoomCode(gedung, nomor){
   if(!gedung || !nomor) return '';
@@ -572,7 +586,6 @@ function buildRoomCode(gedung, nomor){
 }
 
 function parseRoomCode(code){
-  // parse "A-01" → {gedung:'A', nomor:'01'}
   if(!code) return {gedung:'A', nomor:''};
   const match = code.match(/^([A-Za-z]+)-(\d+)$/);
   if(match) return { gedung: match[1].toUpperCase(), nomor: String(parseInt(match[2])) };
@@ -592,7 +605,9 @@ function updateRoomPreview(){
   }
 }
 
-// ── FILL PROPERTY DROPDOWNS ──
+// ════════════════════
+//  FILL PROPERTY DROPDOWNS
+// ════════════════════
 function fillPropSelects(){
   const opts = '<option value="">— Pilih Properti —</option>' +
     _properties.map(p => {
@@ -604,7 +619,76 @@ function fillPropSelects(){
   document.getElementById('fRoom').innerHTML = '<option value="">— Pilih Kamar —</option>';
 }
 
-// ── TENANT MODAL — room dropdown dari kamar yang ada di properti ──
+// ════════════════════
+//  TENANT DROPDOWN di modal Kamar
+//  Filter: hanya penyewa yg propertinya sama (atau semua jika belum pilih properti)
+// ════════════════════
+function fillRoomTenantSelect(selectedPropId, currentTenantId){
+  const sel = document.getElementById('rTenantSelect');
+
+  // ambil penyewa yang relevan: sesuai properti atau belum punya properti
+  let candidates = _tenants.filter(t => {
+    if(!selectedPropId) return true; // belum pilih properti → tampilkan semua
+    return !t.propertyId || t.propertyId === selectedPropId;
+  });
+
+  // sort by name
+  candidates = [...candidates].sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+  sel.innerHTML = '<option value="">— Tidak Ada / Kosong —</option>' +
+    candidates.map(t => {
+      const roomInfo = t.roomNumber ? ` · Kamar ${t.roomNumber}` : '';
+      const propObj  = _properties.find(p => p.id === t.propertyId);
+      const propInfo = propObj ? ` (${propObj.name})` : '';
+      return `<option value="${t.id}" ${t.id === currentTenantId ? 'selected' : ''}>${t.name}${roomInfo}${propInfo}</option>`;
+    }).join('');
+
+  // tampilkan info penyewa yg sedang terpilih
+  onRoomTenantSelectChange();
+}
+
+function onRoomTenantSelectChange(){
+  const sel   = document.getElementById('rTenantSelect');
+  const info  = document.getElementById('tenantSelectInfo');
+  const tenId = sel.value;
+  document.getElementById('rTenantId').value = tenId;
+
+  if(!tenId){ info.className='tenant-select-info'; info.innerHTML=''; return; }
+
+  const t = _tenants.find(x => x.id === tenId);
+  if(!t){ info.className='tenant-select-info'; return; }
+
+  const prop = _properties.find(p => p.id === t.propertyId);
+  const roomDisplay = t.roomNumber || '—';
+  info.className = 'tenant-select-info show';
+  info.innerHTML = `👤 <strong>${t.name}</strong> · 📞 ${t.phone||'—'} · 🚪 Kamar ${roomDisplay}${prop ? ' · '+prop.name : ''}`;
+}
+
+// ketika properti di modal kamar berubah → refresh dropdown penyewa
+function onRoomPropChange(){
+  const propId = document.getElementById('rProperty').value;
+  fillRoomTenantSelect(propId, document.getElementById('rTenantId').value);
+}
+
+// ketika status berubah → toggle aktif/nonaktif dropdown penyewa
+function onRoomStatusChange(){
+  const status = document.getElementById('rStatus').value;
+  const sel    = document.getElementById('rTenantSelect');
+  const grp    = document.getElementById('tenantSelectGroup');
+  if(status !== 'Terisi'){
+    // reset penyewa jika bukan Terisi
+    sel.value = '';
+    document.getElementById('rTenantId').value = '';
+    document.getElementById('tenantSelectInfo').className = 'tenant-select-info';
+    grp.style.opacity = '0.45';
+    sel.disabled = true;
+  } else {
+    grp.style.opacity = '1';
+    sel.disabled = false;
+  }
+}
+
+// ── TENANT MODAL — room dropdown dari kamar kosong di properti ──
 function onTenantPropChange(){
   const propId = document.getElementById('fProperty').value;
   const roomSel = document.getElementById('fRoom');
@@ -614,7 +698,6 @@ function onTenantPropChange(){
     roomSel.innerHTML = '<option value="">— Belum ada kamar —</option>';
     return;
   }
-  // sort kamar by roomNumber
   const sorted = [...propRooms].sort((a,b) => (a.roomNumber||'').localeCompare(b.roomNumber||''));
   roomSel.innerHTML = '<option value="">— Pilih Kamar —</option>' +
     sorted.map(r => {
@@ -707,9 +790,8 @@ function openEditTenantModal(id){
   document.getElementById('fProperty').value = t.propertyId||'';
   if(t.propertyId){
     onTenantPropChange();
-    // set value setelah dropdown terisi
     setTimeout(() => {
-      document.getElementById('fRoom').value = t.roomNumber || (t.roomId||'').replace('room','');
+      document.getElementById('fRoom').value = t.roomNumber || (t.roomId||'').replace('room_','').replace('room','');
     }, 0);
   }
   if(t.startDate){
@@ -760,6 +842,9 @@ function openAddRoomModal(){
   document.getElementById('roomPreview').style.display = 'none';
   document.getElementById('rType').value = 'Standard';
   document.getElementById('rStatus').value = 'Kosong';
+  // reset tenant dropdown
+  fillRoomTenantSelect('', '');
+  onRoomStatusChange(); // nonaktifkan dropdown penyewa karena status Kosong
   document.getElementById('roomModal').classList.add('open');
 }
 
@@ -771,30 +856,42 @@ function openEditRoomModal(roomId, propId){
   document.getElementById('editRoomPropId').value = propId;
   document.getElementById('rProperty').value = propId;
 
-  // parse roomNumber misal "A-01" → gedung=A, nomor=1
   const parsed = parseRoomCode(r.roomNumber || '');
   document.getElementById('rGedung').value = parsed.gedung;
   document.getElementById('rNomor').value  = parsed.nomor;
   updateRoomPreview();
 
-  document.getElementById('rType').value = r.type||'Standard';
-  document.getElementById('rPrice').value = r.price||'';
+  document.getElementById('rType').value   = r.type||'Standard';
+  document.getElementById('rPrice').value  = r.price||'';
   document.getElementById('rStatus').value = r.status||'Kosong';
-  document.getElementById('rTenantId').value = r.currentTenantId||'';
+
+  // ▸ isi dropdown penyewa berdasarkan properti kamar & currentTenantId
+  const currentTenantId = r.currentTenantId||'';
+  document.getElementById('rTenantId').value = currentTenantId;
+  fillRoomTenantSelect(propId, currentTenantId);
+
+  // aktif/nonaktif berdasarkan status
+  onRoomStatusChange();
+  // paksa aktif jika Terisi (karena onRoomStatusChange sudah handle)
+  if(r.status === 'Terisi'){
+    document.getElementById('rTenantSelect').disabled = false;
+    document.getElementById('tenantSelectGroup').style.opacity = '1';
+  }
+
   document.getElementById('roomModal').classList.add('open');
 }
 
 function closeRoomModal(){ document.getElementById('roomModal').classList.remove('open'); }
 
 async function saveRoom(){
-  const editId = document.getElementById('editRoomId').value;
+  const editId   = document.getElementById('editRoomId').value;
   const editPropId = document.getElementById('editRoomPropId').value;
-  const propId = document.getElementById('rProperty').value;
-  const gedung = document.getElementById('rGedung').value;
-  const nomor  = document.getElementById('rNomor').value;
-  const type   = document.getElementById('rType').value;
-  const price  = document.getElementById('rPrice').value;
-  const status = document.getElementById('rStatus').value;
+  const propId   = document.getElementById('rProperty').value;
+  const gedung   = document.getElementById('rGedung').value;
+  const nomor    = document.getElementById('rNomor').value;
+  const type     = document.getElementById('rType').value;
+  const price    = document.getElementById('rPrice').value;
+  const status   = document.getElementById('rStatus').value;
   const tenantId = document.getElementById('rTenantId').value.trim();
 
   if(!propId || !gedung || !nomor || !price){
@@ -875,7 +972,6 @@ async function runDelete(){
 //  RENDER
 // ════════════════════
 function renderRooms(tenantMap){
-  // sort by propertyName then roomNumber
   const sorted = [..._allRooms].sort((a,b) => {
     const p = (a.propertyName||'').localeCompare(b.propertyName||'');
     if(p !== 0) return p;
